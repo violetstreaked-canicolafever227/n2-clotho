@@ -1,27 +1,31 @@
-// n2c — .n2 언어 컴파일러 CLI (파싱 + 검증 + 계약 체크)
+// n2c — .n2 언어 컴파일러 CLI (파싱 + 검증 + 계약 + 쿼리)
 use std::env;
 use std::fs;
 use n2_compiler::parser::parse_n2;
 use n2_compiler::validator;
 use n2_compiler::contract::ContractRuntime;
+use n2_compiler::query::N2Registry;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("🔧 n2c v0.2.0 — QLN 2.0 컴파일러");
+        eprintln!("🔧 n2c v0.3.0 — QLN 2.0 컴파일러");
         eprintln!();
         eprintln!("사용법:");
-        eprintln!("  n2c <파일.n2>              파싱 + AST JSON 출력");
-        eprintln!("  n2c validate <파일.n2>     파싱 + 스키마 검증 + 계약 체크");
-        eprintln!("  n2c simulate <파일.n2>     계약 상태머신 시뮬레이션");
+        eprintln!("  n2c <파일.n2>                           파싱 + AST JSON 출력");
+        eprintln!("  n2c validate <파일.n2>                  파싱 + 검증 + 계약 체크");
+        eprintln!("  n2c simulate <파일.n2>                  계약 상태머신 시뮬레이션");
+        eprintln!("  n2c query <파일.n2> \"SELECT * FROM rules\"   SQL 쿼리");
         std::process::exit(1);
     }
 
-    let (command, filepath) = if args.len() >= 3 {
-        (args[1].as_str(), &args[2])
+    let (command, filepath, extra) = if args.len() >= 4 {
+        (args[1].as_str(), &args[2], Some(args[3].clone()))
+    } else if args.len() >= 3 {
+        (args[1].as_str(), &args[2], None)
     } else {
-        ("parse", &args[1])
+        ("parse", &args[1], None)
     };
 
     let source = match fs::read_to_string(filepath) {
@@ -32,7 +36,7 @@ fn main() {
         }
     };
 
-    println!("🔧 n2c v0.2.0 — QLN 2.0 컴파일러");
+    println!("🔧 n2c v0.3.0 — QLN 2.0 컴파일러");
     println!("📄 파일: {}", filepath);
     println!();
 
@@ -120,9 +124,26 @@ fn main() {
 
             println!("{}", runtime.summary());
         }
+        "query" => {
+            let registry = N2Registry::from_file(&ast);
+            println!("{}", registry.summary());
+            println!();
+
+            let sql = extra.unwrap_or_else(|| "SELECT * FROM rules".to_string());
+            println!("📝 SQL: {}", sql);
+            println!();
+
+            match registry.execute_query(&sql) {
+                Ok(result) => print!("{}", result),
+                Err(e) => {
+                    eprintln!("❌ 쿼리 에러: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
         _ => {
             eprintln!("❌ 알 수 없는 명령: '{}'", command);
-            eprintln!("   사용 가능: parse, validate, simulate");
+            eprintln!("   사용 가능: parse, validate, simulate, query");
             std::process::exit(1);
         }
     }

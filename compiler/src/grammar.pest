@@ -70,10 +70,10 @@ transition_stmt  = { identifier ~ "->" ~ identifier ~ ":" ~ "on" ~ identifier }
 // ── @rule Block ──
 rule_block = { "@rule" ~ identifier ~ "{" ~ rule_body* ~ "}" }
 rule_body  = {
-    rule_field
-  | check_block
+    check_block
   | blacklist_block
   | on_match_block
+  | rule_field
 }
 rule_field       = { identifier ~ ":" ~ value }
 check_block      = { "check" ~ "{" ~ condition_stmt* ~ "}" }
