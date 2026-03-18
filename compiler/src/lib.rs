@@ -4,3 +4,6 @@ pub mod parser;
 pub mod validator;
 pub mod contract;
 pub mod query;
+
+#[cfg(feature = "wasm")]
+pub mod wasm;

@@ -1,12 +1,24 @@
 # n2-compiler — QLN 2.0 .n2 언어 컴파일러 프로토타입
 [package]
 name = "n2-compiler"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-description = "QLN 2.0 .n2 language compiler — Rust + MD + SQL + Semantic"
+description = "QLN 2.0 .n2 language compiler — Rust + MD + SQL + Semantic + WASM"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 pest = "2.7"
 pest_derive = "2.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+wasm-bindgen = { version = "0.2", optional = true }
+
+[features]
+default = []
+wasm = ["wasm-bindgen"]
+
+[profile.release]
+opt-level = "s"
+lto = true
