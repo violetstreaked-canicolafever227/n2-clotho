@@ -1,0 +1,113 @@
+# Soul v5.0 전체 규칙 — .n2 실전 예제
+# 현재 GEMINI.md + Soul 시스템의 핵심 규칙을 .n2로 변환
+
+@meta {
+  name: "soul-rules"
+  version: "5.0.0"
+  description: "N2 Soul 전체 규칙 — 부팅/작업/종료 시퀀스 + 보안 정책"
+  author: "rose"
+  target: workflow
+  enforce: strict
+}
+
+# ── 상태머신: 세션 라이프사이클 ──
+
+@contract SessionLifecycle {
+  description: "세션 상태 전이 강제"
+  scope: session
+  states: SessionState
+
+  transitions {
+    IDLE -> BOOTING : on n2_boot
+    BOOTING -> READY : on boot_complete
+    READY -> WORKING : on n2_work_start
+    WORKING -> WORKING : on n2_work_log
+    WORKING -> IDLE : on n2_work_end
+  }
+}
+
+# ── 보안 계약: 파괴적 명령어 차단 ──
+
+@contract NoDestructiveCommands {
+  description: "파괴적 명령어 자동 차단"
+  scope: command
+  enforce: strict
+}
+
+# ── 보안 규칙: 패키지 설치 금지 ──
+
+@rule NoAutoInstall {
+  description: "패키지 자동 설치 차단"
+  scope: command
+  enforce: strict
+
+  blacklist: [
+    /npm install/,
+    /npm i /,
+    /yarn add/,
+    /pip install/,
+    /npm install -g/
+  ]
+}
+
+# ── 보안 규칙: 파괴적 명령어 블랙리스트 ──
+
+@rule DestructiveCommandBlock {
+  description: "파괴적 명령어 블랙리스트"
+  scope: command
+  enforce: strict
+
+  blacklist: [
+    /rm -rf/,
+    /Remove-Item.*-Recurse.*-Force/,
+    /git push --force/,
+    /expo prebuild --clean/,
+    /DROP TABLE/i,
+    /TRUNCATE/i,
+    /DELETE FROM/i
+  ]
+}
+
+# ── 워크플로우: 부팅 시퀀스 ──
+
+@workflow Boot {
+  description: "세션 시작 시 자동 실행"
+  trigger: session_start
+  enforce: strict
+  timeout: 30s
+
+  step boot {
+    description: "n2_boot 호출"
+    action: n2_boot()
+    required: true
+    timeout: 15s
+    output -> $BOOT
+  }
+
+  step greet {
+    description: "핸드오프 요약 보고"
+    depends_on: boot
+    action: compose_response()
+  }
+}
+
+# ── 워크플로우: 종료 시퀀스 ──
+
+@workflow Ending {
+  description: "세션 종료 시 자동 실행"
+  trigger: session_end
+  enforce: strict
+
+  step save {
+    description: "작업 기록 저장"
+    action: n2_work_end()
+    required: true
+    output -> $SAVE
+  }
+
+  step report {
+    description: "최종 요약 보고"
+    depends_on: save
+    action: compose_response()
+  }
+}
