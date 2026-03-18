@@ -1,0 +1,178 @@
+// .n2 언어 PEG 문법 정의 — QLN 2.0 파서
+// pest PEG parser grammar for the .n2 language
+
+// ── Whitespace & Comments ──
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT    = _{ "#" ~ (!"\n" ~ ANY)* }
+
+// ── Entry Point ──
+n2_file = { SOI ~ block* ~ EOI }
+
+// ── Top-Level Blocks ──
+block = {
+    meta_block
+  | import_block
+  | schema_block
+  | contract_block
+  | rule_block
+  | workflow_block
+  | query_block
+  | semantic_block
+}
+
+// ── @meta Block ──
+meta_block = { "@meta" ~ "{" ~ meta_field* ~ "}" }
+meta_field = { identifier ~ ":" ~ value }
+
+// ── @import Block ──
+import_block   = { "@import" ~ "{" ~ import_stmt* ~ "}" }
+import_stmt    = { "from" ~ string_literal ~ "use" ~ "{" ~ import_list ~ "}" }
+import_list    = { identifier ~ ("," ~ identifier)* }
+
+// ── @schema Block ──
+schema_block   = { "@schema" ~ "{" ~ schema_def* ~ "}" }
+schema_def     = { identifier ~ ("=" ~ "enum")? ~ "{" ~ schema_field* ~ "}" }
+schema_field   = { identifier ~ (":" ~ type_expr ~ field_attrs?)? ~ ","? }
+type_expr      = { identifier ~ ("<" ~ type_expr ~ ("," ~ type_expr)* ~ ">")? ~ "[]"? }
+field_attrs    = { "[" ~ field_attr ~ ("," ~ field_attr)* ~ "]" }
+field_attr     = {
+    "required"
+  | "default" ~ ":" ~ value
+  | "range" ~ ":" ~ range_expr
+  | "match" ~ ":" ~ regex_literal
+}
+range_expr     = { number ~ ".." ~ number }
+
+// ── @contract Block ──
+contract_block = { "@contract" ~ identifier ~ "{" ~ contract_body* ~ "}" }
+contract_body  = {
+    contract_field
+  | precondition_block
+  | postcondition_block
+  | invariant_block
+  | recovery_block
+  | states_block
+  | transitions_block
+}
+contract_field       = { identifier ~ ":" ~ value }
+precondition_block   = { "precondition" ~ "{" ~ condition_stmt* ~ "}" }
+postcondition_block  = { "postcondition" ~ "{" ~ condition_stmt* ~ "}" }
+invariant_block      = { "invariant" ~ "{" ~ invariant_stmt* ~ "}" }
+recovery_block       = { "recovery" ~ "{" ~ recovery_stmt* ~ "}" }
+states_block         = { "states" ~ ":" ~ identifier }
+transitions_block    = { "transitions" ~ "{" ~ transition_stmt* ~ "}" }
+
+condition_stmt   = { expression ~ "=>" ~ string_literal }
+invariant_stmt   = { ("on" ~ identifier ~ ("requires" ~ expression)?)? ~ expression? ~ "=>" ~ (string_literal | "continue") }
+recovery_stmt    = { "on" ~ identifier ~ "=>" ~ action_block }
+transition_stmt  = { identifier ~ "->" ~ identifier ~ ":" ~ "on" ~ identifier }
+
+// ── @rule Block ──
+rule_block = { "@rule" ~ identifier ~ "{" ~ rule_body* ~ "}" }
+rule_body  = {
+    rule_field
+  | check_block
+  | blacklist_block
+  | on_match_block
+}
+rule_field       = { identifier ~ ":" ~ value }
+check_block      = { "check" ~ "{" ~ condition_stmt* ~ "}" }
+blacklist_block  = { "blacklist" ~ ":" ~ "[" ~ regex_list ~ "]" }
+on_match_block   = { "on_match" ~ action_block }
+regex_list       = { regex_literal ~ ("," ~ regex_literal)* }
+
+// ── @workflow Block ──
+workflow_block = { "@workflow" ~ identifier ~ "{" ~ workflow_body* ~ "}" }
+workflow_body  = { workflow_field | step_block | apply_contracts }
+workflow_field = { identifier ~ ":" ~ value }
+apply_contracts = { "apply_contracts" ~ ":" ~ "[" ~ identifier_list ~ "]" }
+
+step_block = { "step" ~ identifier ~ "{" ~ step_body* ~ "}" }
+step_body  = {
+    step_field
+  | expect_block
+  | output_binding
+}
+step_field     = { identifier ~ ":" ~ value }
+output_binding = { "output" ~ "->" ~ variable }
+expect_block   = { "expect" ~ "{" ~ expect_stmt* ~ "}" }
+expect_stmt    = { expression ~ "=>" ~ (value | goto_expr | "continue" | "retry" ~ "(" ~ step_field* ~ ")") }
+goto_expr      = { "goto" ~ identifier ~ ("with" ~ "{" ~ step_field* ~ "}")? }
+
+// ── @query Block ──
+query_block = { "@query" ~ identifier ~ "{" ~ query_body* ~ "}" }
+query_body  = { query_field | sql_block }
+query_field = { identifier ~ ":" ~ value }
+sql_block   = { "sql" ~ "{" ~ sql_content ~ "}" }
+sql_content = { (!("}" ~ WHITESPACE* ~ "}") ~ ANY)+ }
+
+// ── @semantic Block ──
+semantic_block = { "@semantic" ~ identifier ~ "{" ~ semantic_body* ~ "}" }
+semantic_body  = { semantic_field | index_block | aliases_block | match_block }
+semantic_field = { identifier ~ ":" ~ value }
+index_block    = { "index" ~ identifier ~ "{" ~ step_field* ~ "}" }
+aliases_block  = { "aliases" ~ "{" ~ alias_stmt* ~ "}" }
+alias_stmt     = { string_literal ~ "=>" ~ identifier }
+match_block    = { "match" ~ "(" ~ string_literal ~ ")" ~ "{" ~ step_field* ~ "}" }
+
+// ── Action Block ──
+action_block = { "{" ~ action_stmt* ~ "}" }
+action_stmt  = { function_call | assignment }
+
+// ── Expressions ──
+expression = { unary_expr ~ (binary_op ~ unary_expr)* }
+unary_expr = { ("not" ~ unary_expr) | primary_expr }
+primary_expr = {
+    function_call
+  | variable
+  | string_literal
+  | number
+  | boolean
+  | identifier ~ "." ~ identifier_chain
+  | identifier
+  | "(" ~ expression ~ ")"
+}
+
+identifier_chain = { identifier ~ ("." ~ identifier)* }
+
+binary_op = {
+    "==" | "!=" | ">=" | "<=" | ">" | "<"
+  | "and" | "or"
+  | "=~" | "!~"
+  | "|"
+}
+
+// ── Function Calls ──
+function_call = { identifier ~ "(" ~ (call_arg ~ ("," ~ call_arg)*)? ~ ")" }
+call_arg      = { (identifier ~ ":" ~ value) | value }
+
+// ── Assignment ──
+assignment = { ("let" ~ identifier | variable) ~ "=" ~ value }
+
+// ── Values ──
+value = {
+    string_literal
+  | template_string
+  | duration
+  | number
+  | boolean
+  | regex_literal
+  | array_literal
+  | function_call
+  | variable
+  | identifier ~ "." ~ identifier_chain
+  | identifier
+}
+
+array_literal  = { "[" ~ (value ~ ("," ~ value)*)? ~ "]" }
+identifier_list = { identifier ~ ("," ~ identifier)* }
+
+// ── Primitives ──
+identifier      = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
+variable        = @{ "$" ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_" | ".")* }
+string_literal  = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+template_string = @{ "\"\"\"" ~ (!"\"\"\"" ~ ANY)* ~ "\"\"\"" }
+number          = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+boolean         = @{ "true" | "false" }
+duration        = @{ ASCII_DIGIT+ ~ ("ms" | "s" | "m" | "h") }
+regex_literal   = @{ "/" ~ (!"/" ~ ANY)+ ~ "/" ~ ("i" | "g" | "m")* }

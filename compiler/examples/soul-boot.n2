@@ -1,0 +1,43 @@
+# Soul v5.0 부팅 시퀀스 — .n2 예제 파일
+
+@meta {
+  name: "soul-boot"
+  version: "5.0.0"
+  description: "N2 Soul 부팅 시퀀스"
+  author: "rose"
+  target: workflow
+  enforce: strict
+}
+
+@workflow Boot {
+  description: "세션 시작 시 자동 실행되는 부팅 시퀀스"
+  trigger: session_start
+  enforce: strict
+  timeout: 30s
+
+  step boot {
+    description: "n2_boot 호출로 전체 컨텍스트 로드"
+    action: n2_boot()
+    required: true
+    timeout: 15s
+    output -> $BOOT
+  }
+
+  step greet {
+    description: "주인님께 인사 및 핸드오프 보고"
+    depends_on: boot
+    action: compose_response()
+  }
+}
+
+@rule DestructiveBlock {
+  description: "파괴적 명령어 자동 차단"
+  scope: command
+  enforce: strict
+
+  blacklist: [
+    /rm -rf/,
+    /git push --force/,
+    /DROP TABLE/i
+  ]
+}
