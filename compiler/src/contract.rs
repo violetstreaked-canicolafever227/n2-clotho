@@ -60,23 +60,23 @@ impl ContractRuntime {
         let mut machines = HashMap::new();
 
         for block in &file.blocks {
-            if let Block::Contract(ct) = block {
-                if ct.states.is_some() && !ct.transitions.is_empty() {
-                    let sm = StateMachine {
-                        name: ct.name.clone(),
-                        states: Vec::new(), // 전이에서 자동 추출
-                        initial_state: ct.transitions.first()
-                            .map(|t| t.from.clone())
-                            .unwrap_or_default(),
-                        transitions: ct.transitions.iter().map(|t| Transition {
-                            from: t.from.clone(),
-                            to: t.to.clone(),
-                            on_event: t.on_event.clone(),
-                        }).collect(),
-                        invariants: ct.invariants.clone(),
-                    };
-                    machines.insert(ct.name.clone(), sm);
-                }
+            if let Block::Contract(ct) = block
+                && ct.states.is_some() && !ct.transitions.is_empty()
+            {
+                let sm = StateMachine {
+                    name: ct.name.clone(),
+                    states: Vec::new(),
+                    initial_state: ct.transitions.first()
+                        .map(|t| t.from.clone())
+                        .unwrap_or_default(),
+                    transitions: ct.transitions.iter().map(|t| Transition {
+                        from: t.from.clone(),
+                        to: t.to.clone(),
+                        on_event: t.on_event.clone(),
+                    }).collect(),
+                    invariants: ct.invariants.clone(),
+                };
+                machines.insert(ct.name.clone(), sm);
             }
         }
 
@@ -261,23 +261,9 @@ mod tests {
 }
 "#;
         let file = parse_n2(source).unwrap();
-
-        // 디버그: contract 블록의 transitions 확인
-        for block in &file.blocks {
-            if let crate::ast::Block::Contract(ct) = block {
-                eprintln!("Contract: {}, states: {:?}, transitions: {}", ct.name, ct.states, ct.transitions.len());
-                for t in &ct.transitions {
-                    eprintln!("  {} -> {} : on {}", t.from, t.to, t.on_event);
-                }
-            }
-        }
-
         let mut runtime = ContractRuntime::from_file(&file);
 
-        eprintln!("Machines: {:?}", runtime.machines.keys().collect::<Vec<_>>());
-        eprintln!("Current states: {:?}", runtime.current_states);
-
-        // 머신이 존재하는지 먼저 확인
+        // 머신이 존재하는지 확인
         assert!(!runtime.machines.is_empty(), "상태머신이 비어있습니다");
         assert!(runtime.machines.contains_key("SessionLifecycle"), "SessionLifecycle 머신이 없습니다");
 

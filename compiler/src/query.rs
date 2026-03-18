@@ -1,6 +1,5 @@
 // SQL 쿼리 엔진 — @query 블록의 SQL 실행 + 도구/규칙/상태 가상 테이블
 use crate::ast::*;
-use std::collections::HashMap;
 
 /// 가상 레지스트리: .n2 파일에서 추출한 도구/규칙/계약 정보를 SQL로 쿼리 가능하게
 #[derive(Debug)]
@@ -93,7 +92,7 @@ impl std::fmt::Display for QueryResult {
 impl N2Registry {
     /// N2File에서 레지스트리 구축
     pub fn from_file(file: &N2File) -> Self {
-        let mut tools = Vec::new();
+        let tools = Vec::new();
         let mut rules = Vec::new();
         let mut contracts = Vec::new();
         let mut workflows = Vec::new();
@@ -153,7 +152,7 @@ impl N2Registry {
         } else if sql_lower.contains("from tools") || sql_lower.contains("from tool") {
             Ok(self.query_tools())
         } else {
-            Err(format!("지원하지 않는 테이블입니다. 사용 가능: rules, contracts, workflows, tools"))
+            Err("지원하지 않는 테이블입니다. 사용 가능: rules, contracts, workflows, tools".to_string())
         }
     }
 

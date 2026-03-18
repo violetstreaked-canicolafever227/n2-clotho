@@ -35,7 +35,7 @@ pub fn validate(file: &N2File) -> Vec<ValidationError> {
     validate_meta_required(file, &mut errors);
 
     // 2. @schema 정의 수집
-    let schema_defs = collect_schema_defs(file);
+    let _schema_defs = collect_schema_defs(file);
 
     // 3. @workflow 검증
     validate_workflows(file, &mut errors);
