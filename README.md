@@ -2,6 +2,11 @@
 
 [![npm version](https://img.shields.io/npm/v/n2-clotho.svg)](https://www.npmjs.com/package/n2-clotho)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Rust](https://img.shields.io/badge/Built_with-Rust-dea584?logo=rust)](https://www.rust-lang.org/)
+[![WASM](https://img.shields.io/badge/Runs_on-WASM-654ff0?logo=webassembly)](https://webassembly.org/)
+[![GitHub stars](https://img.shields.io/github/stars/choihyunsus/n2-clotho?style=social)](https://github.com/choihyunsus/n2-clotho)
+
+**[한국어 README](README.ko.md)**
 
 > **Markdown rules are dead. Long live `.n2`.**
 
