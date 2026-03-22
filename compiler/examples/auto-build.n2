@@ -1,0 +1,104 @@
+# N2 Auto-Build Pipeline — .n2 워크플로우 실전 예제
+
+@meta {
+  name: "auto-build-pipeline"
+  version: "1.0.0"
+  description: "Feature request to deployment in one shot"
+  author: "rose"
+  target: workflow
+  enforce: strict
+}
+
+# ── 상태머신: 빌드 파이프라인 ──
+
+@contract BuildLifecycle {
+  description: "Build pipeline state enforcement"
+  scope: session
+  states: BuildState
+
+  transitions {
+    IDLE -> PLANNING : on start_build
+    PLANNING -> DESIGNING : on plan_complete
+    DESIGNING -> IMPLEMENTING : on design_complete
+    IMPLEMENTING -> TESTING : on code_complete
+    TESTING -> DEPLOYING : on tests_pass
+    TESTING -> IMPLEMENTING : on tests_fail
+    DEPLOYING -> IDLE : on deploy_complete
+  }
+}
+
+# ── 보안: 빌드 중 위험 행위 차단 ──
+
+@rule NoBuildHazards {
+  description: "Block hazardous actions during build"
+  scope: command
+  enforce: strict
+
+  blacklist: [
+    /rm -rf/,
+    /git push --force/,
+    /DROP TABLE/i,
+    /npm install -g/
+  ]
+}
+
+# ── 워크플로우: 자동 빌드 ──
+
+@workflow AutoBuild {
+  description: "Complete build pipeline from idea to deployment"
+  trigger: session_start
+  enforce: strict
+  timeout: 300s
+
+  step plan {
+    description: "Analyze requirements and create implementation plan"
+    action: generate_plan()
+    required: true
+    timeout: 30s
+    output -> $PLAN
+  }
+
+  step design {
+    description: "Generate UI design from plan"
+    depends_on: plan
+    action: create_design()
+    timeout: 60s
+    output -> $DESIGN
+  }
+
+  step implement {
+    description: "Write code following design"
+    depends_on: design
+    action: code_from_design()
+    timeout: 120s
+    output -> $CODE
+  }
+
+  step test {
+    description: "Run tests and verify"
+    depends_on: implement
+    action: run_tests()
+    timeout: 60s
+    output -> $RESULTS
+  }
+
+  step notify {
+    description: "Notify completion"
+    depends_on: test
+    action: send_notification()
+    required: true
+  }
+}
+
+# ── SQL 쿼리: 파이프라인 상태 조회 ──
+
+@query PipelineStatus {
+  description: "Query all enforced steps"
+
+  sql {
+    SELECT name, description, enforce
+    FROM workflows
+    WHERE enforce = 'strict'
+    ORDER BY name
+  }
+}
