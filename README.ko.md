@@ -1,3 +1,5 @@
+EN [English](README.md)
+
 # 🧵 Clotho — AI 에이전트의 운명의 실
 
 [![npm version](https://img.shields.io/npm/v/n2-clotho.svg)](https://www.npmjs.com/package/n2-clotho)
@@ -5,8 +7,6 @@
 [![Rust](https://img.shields.io/badge/Built_with-Rust-dea584?logo=rust)](https://www.rust-lang.org/)
 [![WASM](https://img.shields.io/badge/Runs_on-WASM-654ff0?logo=webassembly)](https://webassembly.org/)
 [![GitHub stars](https://img.shields.io/github/stars/choihyunsus/n2-clotho?style=social)](https://github.com/choihyunsus/n2-clotho)
-
-**[English README](README.md)**
 
 > **마크다운 규칙은 죽었다. `.n2` 만세.**
 
