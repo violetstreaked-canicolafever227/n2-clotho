@@ -1,9 +1,9 @@
-# n2-compiler — QLN 2.0 .n2 언어 컴파일러 프로토타입
+# n2-compiler — .n2 language compiler for AI agents (Rust + WASM)
 [package]
 name = "n2-compiler"
-version = "0.2.0"
-edition = "2024"
-description = "QLN 2.0 .n2 language compiler — Rust + MD + SQL + Semantic + WASM"
+version = "2.0.0"
+edition = "2021"
+description = "Compiled instruction language for AI agents — Rust + WASM compiler for .n2 rules"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

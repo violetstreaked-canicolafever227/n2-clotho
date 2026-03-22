@@ -97,5 +97,5 @@ pub fn extract_blacklist_wasm(source: &str) -> Result<String, JsValue> {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub fn n2c_version() -> String {
-    "n2c v0.3.0-wasm (QLN 2.0 compiler)".to_string()
+    "n2c v2.0.1-wasm (Clotho compiler)".to_string()
 }

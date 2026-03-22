@@ -60,9 +60,8 @@ impl ContractRuntime {
         let mut machines = HashMap::new();
 
         for block in &file.blocks {
-            if let Block::Contract(ct) = block
-                && ct.states.is_some() && !ct.transitions.is_empty()
-            {
+            if let Block::Contract(ct) = block {
+                if ct.states.is_some() && !ct.transitions.is_empty() {
                 let sm = StateMachine {
                     name: ct.name.clone(),
                     states: Vec::new(),
@@ -77,6 +76,7 @@ impl ContractRuntime {
                     invariants: ct.invariants.clone(),
                 };
                 machines.insert(ct.name.clone(), sm);
+                }
             }
         }
 

@@ -10,7 +10,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("🔧 n2c v0.3.0 — QLN 2.0 컴파일러");
+        eprintln!("🔧 n2c v2.0.1 — Clotho compiler");
         eprintln!();
         eprintln!("사용법:");
         eprintln!("  n2c <파일.n2>                           파싱 + AST JSON 출력");
@@ -36,7 +36,7 @@ fn main() {
         }
     };
 
-    println!("🔧 n2c v0.3.0 — QLN 2.0 컴파일러");
+    println!("🔧 n2c v2.0.1 — Clotho compiler");
     println!("📄 파일: {}", filepath);
     println!();
 

@@ -1,5 +1,8 @@
 # 🧵 Clotho — The Thread of Fate for AI Agents
 
+[![npm version](https://img.shields.io/npm/v/n2-clotho.svg)](https://www.npmjs.com/package/n2-clotho)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 > **Markdown rules are dead. Long live `.n2`.**
 
 Clotho is a compiled instruction language for AI agents. It replaces fragile markdown-based rules (GEMINI.md, .cursorrules, CLAUDE.md) with **enforceable, type-checked, deterministic** specifications that agents cannot ignore.
@@ -75,7 +78,21 @@ Clotho introduces `.n2` — a compiled instruction language with:
 ### Installation
 
 ```bash
-# From source (Rust required)
+# npm (WASM — use in Node.js)
+npm install n2-clotho
+```
+
+```javascript
+// Usage in Node.js
+const { parse_n2_wasm, validate_n2_wasm, query_n2_wasm } = require('n2-clotho');
+
+const ast = parse_n2_wasm(n2Source);        // Parse → AST JSON
+const result = validate_n2_wasm(n2Source);  // Validate → errors/warnings
+const table = query_n2_wasm(n2Source, 'SELECT * FROM rules');  // SQL query
+```
+
+```bash
+# From source (Rust required — full CLI)
 git clone https://github.com/choihyunsus/n2-clotho.git
 cd n2-clotho/compiler
 cargo build --release
@@ -431,6 +448,7 @@ Apache-2.0 — Free to use, modify, and distribute.
 
 ## 🔗 Links
 
+- [**npm: n2-clotho**](https://www.npmjs.com/package/n2-clotho) — WASM bindings for Node.js
 - [N2 Soul](https://github.com/choihyunsus/soul) — Agent memory & runtime
 - [N2 Arachne](https://github.com/choihyunsus/n2-arachne) — Code context assembly
 - [N2 QLN](https://github.com/choihyunsus/n2-qln) — Tool orchestration & routing
