@@ -413,10 +413,8 @@ n2-clotho/
 │   │   └── auto-build.n2       # Build pipeline + state machine
 │   └── Cargo.toml
 ├── docs/
-│   ├── 001-project-overview.md
-│   ├── 002-qln2-architecture-research.md
-│   ├── 003-n2-language-spec.md    # Full language specification
-│   └── 004-n2-runtime-manual.md
+│   └── images/
+│       └── clotho-comic.png  # 4-panel comic
 └── README.md
 ```
 
@@ -437,7 +435,6 @@ Apache-2.0 — Free to use, modify, and distribute.
 - [N2 Arachne](https://github.com/choihyunsus/n2-arachne) — Code context assembly
 - [N2 QLN](https://github.com/choihyunsus/n2-qln) — Tool orchestration & routing
 - [N2 Ark](https://github.com/choihyunsus/n2-ark) — Security verification
-- [Language Spec](docs/003-n2-language-spec.md) — Full `.n2` grammar specification
 
 ---
 
