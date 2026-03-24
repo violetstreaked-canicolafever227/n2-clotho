@@ -3,6 +3,7 @@ EN [English](README.md)
 # 🧵 Clotho — AI 에이전트의 운명의 실
 
 [![npm version](https://img.shields.io/npm/v/n2-clotho.svg)](https://www.npmjs.com/package/n2-clotho)
+[![npm downloads](https://img.shields.io/npm/dw/n2-clotho?color=blue&label=downloads)](https://www.npmjs.com/package/n2-clotho)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Rust](https://img.shields.io/badge/Built_with-Rust-dea584?logo=rust)](https://www.rust-lang.org/)
 [![WASM](https://img.shields.io/badge/Runs_on-WASM-654ff0?logo=webassembly)](https://webassembly.org/)

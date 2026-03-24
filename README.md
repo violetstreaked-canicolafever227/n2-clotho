@@ -3,6 +3,7 @@ KR [한국어](README.ko.md)
 # 🧵 Clotho — The Thread of Fate for AI Agents
 
 [![npm version](https://img.shields.io/npm/v/n2-clotho.svg)](https://www.npmjs.com/package/n2-clotho)
+[![npm downloads](https://img.shields.io/npm/dw/n2-clotho?color=blue&label=downloads)](https://www.npmjs.com/package/n2-clotho)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Rust](https://img.shields.io/badge/Built_with-Rust-dea584?logo=rust)](https://www.rust-lang.org/)
 [![WASM](https://img.shields.io/badge/Runs_on-WASM-654ff0?logo=webassembly)](https://webassembly.org/)
@@ -10,7 +11,7 @@ KR [한국어](README.ko.md)
 
 > **Markdown rules are dead. Long live `.n2`.**
 
-Clotho is a compiled instruction language for AI agents. It replaces fragile markdown-based rules (GEMINI.md, .cursorrules, CLAUDE.md) with **enforceable, type-checked, deterministic** specifications that agents cannot ignore.
+Clotho is a **multi-target compiled instruction language** for AI agents. It replaces fragile markdown-based rules (GEMINI.md, .cursorrules, CLAUDE.md) with **enforceable, type-checked, deterministic** specifications that agents cannot ignore — and compiles them to **6 target languages** for total IP coverage.
 
 Named after [Clotho](https://en.wikipedia.org/wiki/Clotho), the Greek goddess who spins the thread of fate — because once you define the rules, they become **destiny**.
 
@@ -164,14 +165,69 @@ n2c simulate my-rules.n2
 
 # Query rules with SQL
 n2c query my-rules.n2 "SELECT * FROM rules WHERE enforce = 'strict'"
+
+# ★ Multi-target compile (v3.0.0)
+n2c compile my-rules.n2 rust     # → my-rules.n2rs
+n2c compile my-rules.n2 go       # → my-rules.n2go
+n2c compile my-rules.n2 all      # → .n2rs .n2c .n2c2 .n2go .n2py .n2ts
+n2c backends                     # List supported targets
 ```
+
+### 🎯 Multi-Target Compilation
+
+Clotho compiles `.n2` contracts to **6 target languages** — securing complete prior art across every implementation path:
+
+| Target | Extension | Use Case |
+|--------|-----------|----------|
+| **Rust** | `.n2rs` | High-performance native runtime |
+| **C** | `.n2c` | Embedded/IoT/System |
+| **C++** | `.n2c2` | Game engines/HPC |
+| **Go** | `.n2go` | Cloud/Microservices |
+| **Python** | `.n2py` | AI/ML pipelines |
+| **TypeScript** | `.n2ts` | Web/Node.js/MCP |
+
+```bash
+$ n2c compile soul-boot.n2 all
+
+🎯 All targets batch compile
+  ✅ rust   → soul-boot.n2rs (1523 bytes)
+  ✅ c      → soul-boot.n2c (989 bytes)
+  ✅ cpp    → soul-boot.n2c2 (1124 bytes)
+  ✅ go     → soul-boot.n2go (828 bytes)
+  ✅ python → soul-boot.n2py (1144 bytes)
+  ✅ ts     → soul-boot.n2ts (979 bytes)
+📊 Result: 6 success, 0 fail / 6 targets
+```
+
+### 🔌 MCP Server
+
+Clotho includes an MCP server so AI agents can compile and validate contracts programmatically:
+
+| MCP Tool | Description |
+|----------|-------------|
+| `clotho_compile` | Compile to a specific target |
+| `clotho_batch` | Compile to all 6 targets at once |
+| `clotho_validate` | Syntax + schema + state machine check |
+| `clotho_backends` | List supported backends |
+| `clotho_inspect` | Read compiled contract contents |
+
+```json
+// MCP configuration
+{
+  "mcpServers": {
+    "n2-clotho": {
+      "command": "node",
+      "args": ["path/to/n2-clotho/mcp/server.js"]
+    }
+  }
+}
 
 ### 🔥 Real Output: Auto-Build Pipeline Validation
 
 Here's actual `n2c validate` output from `auto-build.n2` — a complete build pipeline with state machine, security rules, and SQL queries:
 
 ```
-🔧 n2c v0.3.0 — Clotho Compiler
+🔧 n2c v3.0.0 — Clotho Multi-Target Compiler
 📄 File: auto-build.n2
 
 ── Step 1: Parse ✅
@@ -356,7 +412,7 @@ $ n2c query rules.n2 "SELECT * FROM rules"
     ↓
 [5. Query Optimizer]    SQL query validation
     ↓
-[6. Codegen]            Execution plan (.n2.lock)
+[6. Codegen]            Multi-target code generation (6 languages)
     ↓
 [7. Runtime]            Enforced execution ← requires Soul/QLN
 ```
@@ -428,17 +484,24 @@ n2-clotho/
 │   │   ├── validator.rs     # Schema validation
 │   │   ├── contract.rs      # State machine runtime
 │   │   ├── query.rs         # SQL query engine
+│   │   ├── codegen/         # ★ Multi-target backends
+│   │   │   ├── mod.rs       # CodeGenerator trait + registry
+│   │   │   ├── rust.rs      # → .n2rs
+│   │   │   ├── c.rs         # → .n2c
+│   │   │   ├── cpp.rs       # → .n2c2
+│   │   │   ├── go.rs        # → .n2go
+│   │   │   ├── python.rs    # → .n2py
+│   │   │   └── typescript.rs # → .n2ts
 │   │   ├── wasm.rs          # WASM bindings
 │   │   ├── lib.rs           # Library entry
-│   │   └── main.rs          # CLI entry (n2c)
+│   │   └── main.rs          # CLI entry (n2c v3.0.0)
 │   ├── examples/
-│   │   ├── soul-boot.n2        # Boot sequence example
-│   │   ├── soul-full-rules.n2  # Full ruleset example
-│   │   └── auto-build.n2       # Build pipeline + state machine
 │   └── Cargo.toml
+├── mcp/                     # ★ MCP server
+│   ├── server.js            # stdio/SSE dual transport
+│   ├── package.json
+│   └── tools/               # 5 MCP tools
 ├── docs/
-│   └── images/
-│       └── clotho-comic.png  # 4-panel comic
 └── README.md
 ```
 
