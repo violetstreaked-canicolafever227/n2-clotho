@@ -27,5 +27,6 @@ Thumbs.db
 
 # Internal docs (keep locally, never publish)
 /docs/*.md
+!/docs/skill-vs-n2.md
 /compiler/README.md
 /compiler/examples/test-blacklist.js
