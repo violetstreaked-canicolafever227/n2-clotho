@@ -9,23 +9,11 @@ KR [한국어](README.ko.md)
 [![WASM](https://img.shields.io/badge/Runs_on-WASM-654ff0?logo=webassembly)](https://webassembly.org/)
 [![GitHub stars](https://img.shields.io/github/stars/choihyunsus/n2-clotho?style=social)](https://github.com/choihyunsus/n2-clotho)
 
-> **Markdown rules are dead. Long live `.n2`.**
+> **Define it. Compile it. Enforce it.**
 
-Clotho is a **multi-target compiled instruction language** for AI agents. It replaces fragile markdown-based rules (GEMINI.md, .cursorrules, CLAUDE.md) with **enforceable, type-checked, deterministic** specifications that agents cannot ignore — and compiles them to **6 target languages** for total IP coverage.
+Clotho is a **compiled instruction language** that turns natural-language AI rules into **deterministic, enforceable contracts**. It replaces fragile markdown files (GEMINI.md, .cursorrules, CLAUDE.md) with `.n2` — a structured language that is **parsed, validated, and enforced** so AI agents follow your rules every time.
 
 Named after [Clotho](https://en.wikipedia.org/wiki/Clotho), the Greek goddess who spins the thread of fate — because once you define the rules, they become **destiny**.
-
-```
-# Before: GEMINI.md (a polite suggestion)
-"Please don't run rm -rf. Thanks!"
-→ AI: "Sure!" *runs rm -rf anyway*
-
-# After: rules.n2 (compiled law)
-@rule NoDestructive {
-  blacklist: [/rm -rf/, /DROP TABLE/i]
-}
-→ AI attempts rm -rf → ❌ BLOCKED. No exceptions.
-```
 
 ## 🎯 The Problem
 
@@ -35,39 +23,38 @@ Named after [Clotho](https://en.wikipedia.org/wiki/Clotho), the Greek goddess wh
   <img src="docs/images/clotho-comic.png" alt="Clotho 4-panel comic" width="700" />
 </p>
 
-> **Panel 1**: AI reads your markdown rules... **Panel 2**: ...then ignores them anyway.
-> **Panel 3**: Clotho arrives with `.n2` compiled law. **Panel 4**: Rules enforced. No exceptions.
+> **Panel 1**: AI reads your coding standards... **Panel 2**: ...then ignores half of them.
+> **Panel 3**: Clotho compiles your rules into enforceable law. **Panel 4**: Rules are destiny. No exceptions.
 
-Every AI coding tool has its own markdown-based rule system:
+Every AI coding tool has its own rule system. **None of them enforce anything.**
 
-| Tool | Rule File | Enforcement |
-|------|-----------|:-----------:|
-| Gemini | `GEMINI.md` | 🙏 Hope |
-| Cursor | `.cursorrules` | 🙏 Hope |
-| Claude | `CLAUDE.md` | 🙏 Hope |
-| Windsurf | `.windsurfrules` | 🙏 Hope |
-| System Prompt | `system.txt` | 🙏 Hope |
+| Tool | Rule File | What Happens |
+|------|-----------|:------------:|
+| Gemini | `GEMINI.md` | 🙏 Hopes AI reads it |
+| Cursor | `.cursorrules` | 🙏 Hopes AI follows it |
+| Claude | `CLAUDE.md` | 🙏 Hopes AI remembers it |
+| Windsurf | `.windsurfrules` | 🙏 Hopes AI cares |
 
-The result? **Same rules, different results every time.** Agents "read" the rules but follow them inconsistently. There's no compilation, no validation, no enforcement — just vibes.
+**Result?** You write 200 lines of careful rules. The AI reads them, says "Got it!" — then uses `any` everywhere, skips tests, and names variables `temp1`. The rules exist, but enforcement is zero.
 
 ## 💡 The Solution
 
-One language to replace them all:
+**One compiled language to replace them all.**
 
 ```
 Before (.md + .json + skill files):          After (.n2):
 ┌─────────────────────────────────┐    ┌──────────────────────┐
-│ GEMINI.md      → behavior rules│    │                      │
-│ .cursorrules   → editor rules  │    │   project.n2         │
-│ workflows/*.md → skill steps   │    │                      │
-│ config.json    → MCP settings  │    │   One file.          │
-│ system.txt     → system prompt │    │   Compiled.          │
+│ GEMINI.md      → coding rules  │    │                      │
+│ .cursorrules   → editor prefs  │    │   project.n2         │
+│ workflows/*.md → dev pipelines │    │                      │
+│ config.json    → tool settings │    │   One file.          │
+│ system.txt     → agent persona │    │   Compiled.          │
 │ .env           → variables     │    │   Enforced.          │
 └─────────────────────────────────┘    └──────────────────────┘
    6+ files, zero enforcement            1 file, full enforcement
 ```
 
-Clotho introduces `.n2` — a compiled instruction language with:
+Clotho introduces `.n2` — a compiled language with:
 
 | Feature | Description |
 |---------|-------------|
@@ -76,8 +63,192 @@ Clotho introduces `.n2` — a compiled instruction language with:
 | **Contracts** | State machine behavioral contracts — violation = blocked action |
 | **Enforcement** | `strict` / `warn` / `passive` modes per block |
 | **Determinism** | Same `.n2` file → always the same execution plan |
-| **SQL Queries** | Query your rules like a database: `SELECT * FROM rules WHERE scope = 'command'` |
-| **Semantic Matching** | Ollama-powered intent → tool mapping (optional) |
+| **SQL Queries** | Query your rules like a database |
+| **Multi-Target** | Compile to 6 languages (Rust, C, C++, Go, Python, TypeScript) |
+
+## 🔥 What Can You Build With Clotho?
+
+Clotho is a **general-purpose rule compiler**. Here are just some of the things you can define:
+
+### 1. 📏 Coding Standards — Enforce Quality, Not Just Suggest It
+
+```n2
+@rule TypeScriptStrict {
+  description: "Enforce TypeScript best practices"
+  scope: code
+  enforce: strict
+
+  checks: [
+    no_any_type,            # Zero `as any` — use proper types
+    no_ts_ignore,           # No @ts-ignore or @ts-expect-error
+    explicit_return_types,  # Every function must declare return type
+    max_file_lines: 500,    # Files must stay under 500 lines
+    max_function_lines: 50  # Functions must stay under 50 lines
+  ]
+}
+
+@rule NamingConventions {
+  description: "Consistent naming across the codebase"
+  scope: code
+  enforce: strict
+
+  checks: [
+    components: /^[A-Z][a-zA-Z]+$/,    # PascalCase components
+    variables: /^[a-z][a-zA-Z0-9]*$/,   # camelCase variables
+    constants: /^[A-Z_]+$/,             # UPPER_SNAKE constants
+    files: /^[a-z][a-z0-9-]*\.[a-z]+$/  # kebab-case files
+  ]
+}
+```
+
+> **Before**: "Please use strict TypeScript" → AI uses `any` 47 times.
+> **After**: Compiled rule blocks every `any` before it reaches your codebase.
+
+### 2. 🔄 Workflows — Pipelines That Can't Be Skipped
+
+```n2
+@workflow CodeReview {
+  description: "Mandatory code review pipeline"
+  trigger: on_command("review")
+  enforce: strict
+  interrupt: false
+
+  step lint {
+    description: "Run linter on all changed files"
+    action: run_linter(files: $CHANGED_FILES)
+    expect {
+      pass => continue
+      fail => abort with "Fix lint errors first"
+    }
+  }
+
+  step test {
+    depends_on: lint
+    action: run_tests(coverage: true)
+    expect {
+      coverage >= 80% => continue
+      fail => abort with "Tests must pass with 80%+ coverage"
+    }
+  }
+
+  step review {
+    depends_on: test
+    action: generate_review(diff: $DIFF, standards: $RULES)
+    output -> $REVIEW
+  }
+
+  step approve {
+    depends_on: review
+    action: submit_review($REVIEW)
+    required: true
+  }
+}
+```
+
+> Lint → Test → Review → Approve. Every step enforced. No shortcuts.
+
+### 3. 🤖 Agent Personas — Define How AI Behaves
+
+```n2
+@schema AgentConfig {
+  name: string [required]
+  role: string [required]
+  language: string [default: "en"]
+  tone: enum(professional, friendly, casual) [default: friendly]
+  expertise: string[]
+}
+
+@contract AgentBehavior {
+  scope: response
+  states: AgentConfig
+
+  invariant {
+    on respond requires tone == $CONFIG.tone
+    => "Response must match configured tone"
+
+    on code_generate requires language in $CONFIG.expertise
+    => "Agent should only generate code in known languages"
+  }
+}
+```
+
+> Define your AI's personality, expertise, and boundaries — compiled, not copy-pasted.
+
+### 4. 📋 Project Conventions — Structure That Stays Consistent
+
+```n2
+@rule ProjectHygiene {
+  description: "Every project must maintain clean structure"
+  scope: filesystem
+  enforce: strict
+
+  checks: [
+    readme_required: "Every directory must have README.md",
+    no_temp_files: /\.(tmp|bak|swp)$/,
+    source_header: "Every source file must start with a purpose comment",
+    max_nesting_depth: 4
+  ]
+}
+
+@rule Internationalization {
+  description: "All user-facing strings must use i18n keys"
+  scope: code
+  enforce: warn
+
+  checks: [
+    no_hardcoded_strings_in_jsx,
+    i18n_key_format: /^[a-z]+(\.[a-z_]+)+$/
+  ]
+}
+```
+
+> Folder structure, naming, i18n, documentation — all enforced from day one.
+
+### 5. 🛡️ Security Gates — Built on Clotho, Powered by [Ark](https://github.com/choihyunsus/n2-ark)
+
+```n2
+@rule CommandSafety {
+  description: "Block dangerous operations"
+  scope: command
+  enforce: strict
+
+  blacklist: [
+    /rm -rf/,
+    /git push --force/,
+    /DROP TABLE/i
+  ]
+}
+```
+
+> Security rules are just **one use case** of Clotho. The [N2 Ark](https://github.com/choihyunsus/n2-ark) project takes Clotho contracts and builds a complete security verification layer on top.
+
+### 6. 🔀 Multi-Agent Coordination
+
+```n2
+@contract MultiAgentWorkflow {
+  scope: session
+  states: WorkflowState
+
+  transitions {
+    IDLE -> CLAIMED : on file_claim
+    CLAIMED -> EDITING : on edit_start
+    EDITING -> REVIEWING : on edit_complete
+    REVIEWING -> MERGED : on review_pass
+    REVIEWING -> EDITING : on review_fail
+    MERGED -> IDLE : on release
+  }
+
+  invariant {
+    on edit_start requires owner == $CURRENT_AGENT
+    => "Only the claiming agent can edit"
+
+    on file_claim requires state == IDLE
+    => "Cannot claim a file already being edited"
+  }
+}
+```
+
+> Multiple AI agents working on the same project? Clotho prevents conflicts with compiled ownership contracts.
 
 ## ⚡ Quick Start
 
@@ -111,42 +282,51 @@ cargo build --release
 ### Write Your First `.n2` File
 
 ```n2
-# my-rules.n2 — Your first Clotho ruleset
+# my-project.n2 — Define your project's rules
 
 @meta {
   name: "my-project-rules"
   version: "1.0.0"
-  description: "AI agent behavior rules"
+  description: "Coding standards + workflow for my team"
   enforce: strict
 }
 
-@rule NoAutoInstall {
-  description: "Block unauthorized package installations"
-  scope: command
+@rule CodingStandards {
+  description: "Team coding conventions"
+  scope: code
   enforce: strict
 
-  blacklist: [
-    /npm install/,
-    /yarn add/,
-    /pip install/
+  checks: [
+    no_any_type,
+    max_file_lines: 500,
+    max_function_lines: 50,
+    explicit_return_types
   ]
 }
 
-@workflow Boot {
-  description: "Session startup sequence"
-  trigger: session_start
+@workflow Deploy {
+  description: "Safe deployment pipeline"
+  trigger: on_command("deploy")
   enforce: strict
 
-  step initialize {
-    description: "Load project context"
-    action: load_context()
-    required: true
-    timeout: 15s
+  step build {
+    action: run_build()
+    expect { pass => continue }
   }
 
-  step greet {
-    depends_on: initialize
-    action: compose_response()
+  step test {
+    depends_on: build
+    action: run_tests()
+    expect {
+      all_pass => continue
+      fail => abort with "Fix tests before deploying"
+    }
+  }
+
+  step deploy {
+    depends_on: test
+    action: deploy_to(env: $TARGET_ENV)
+    required: true
   }
 }
 ```
@@ -155,27 +335,27 @@ cargo build --release
 
 ```bash
 # Parse and output AST
-n2c my-rules.n2
+n2c my-project.n2
 
 # Full validation pipeline: parse → schema check → contract verify
-n2c validate my-rules.n2
+n2c validate my-project.n2
 
 # Simulate state machine contracts
-n2c simulate my-rules.n2
+n2c simulate my-project.n2
 
 # Query rules with SQL
-n2c query my-rules.n2 "SELECT * FROM rules WHERE enforce = 'strict'"
+n2c query my-project.n2 "SELECT * FROM rules WHERE enforce = 'strict'"
 
 # ★ Multi-target compile (v3.0.0)
-n2c compile my-rules.n2 rust     # → my-rules.n2rs
-n2c compile my-rules.n2 go       # → my-rules.n2go
-n2c compile my-rules.n2 all      # → .n2rs .n2c .n2c2 .n2go .n2py .n2ts
-n2c backends                     # List supported targets
+n2c compile my-project.n2 rust     # → my-project.n2rs
+n2c compile my-project.n2 go       # → my-project.n2go
+n2c compile my-project.n2 all      # → all 6 targets
+n2c backends                       # List supported targets
 ```
 
-### 🎯 Multi-Target Compilation
+## 🎯 Multi-Target Compilation
 
-Clotho compiles `.n2` contracts to **6 target languages** — securing complete prior art across every implementation path:
+Clotho compiles `.n2` contracts to **6 target languages** — securing complete IP coverage across every platform:
 
 | Target | Extension | Use Case |
 |--------|-----------|----------|
@@ -187,19 +367,19 @@ Clotho compiles `.n2` contracts to **6 target languages** — securing complete 
 | **TypeScript** | `.n2ts` | Web/Node.js/MCP |
 
 ```bash
-$ n2c compile soul-boot.n2 all
+$ n2c compile project.n2 all
 
 🎯 All targets batch compile
-  ✅ rust   → soul-boot.n2rs (1523 bytes)
-  ✅ c      → soul-boot.n2c (989 bytes)
-  ✅ cpp    → soul-boot.n2c2 (1124 bytes)
-  ✅ go     → soul-boot.n2go (828 bytes)
-  ✅ python → soul-boot.n2py (1144 bytes)
-  ✅ ts     → soul-boot.n2ts (979 bytes)
+  ✅ rust   → project.n2rs (1523 bytes)
+  ✅ c      → project.n2c (989 bytes)
+  ✅ cpp    → project.n2c2 (1124 bytes)
+  ✅ go     → project.n2go (828 bytes)
+  ✅ python → project.n2py (1144 bytes)
+  ✅ ts     → project.n2ts (979 bytes)
 📊 Result: 6 success, 0 fail / 6 targets
 ```
 
-### 🔌 MCP Server
+## 🔌 MCP Server
 
 Clotho includes an MCP server so AI agents can compile and validate contracts programmatically:
 
@@ -221,45 +401,33 @@ Clotho includes an MCP server so AI agents can compile and validate contracts pr
     }
   }
 }
+```
 
-### 🔥 Real Output: Auto-Build Pipeline Validation
+### 🔥 Real Compiler Output
 
-Here's actual `n2c validate` output from `auto-build.n2` — a complete build pipeline with state machine, security rules, and SQL queries:
+Here's actual `n2c validate` output — a complete pipeline with state machine, rules, and SQL queries:
 
 ```
 🔧 n2c v3.0.0 — Clotho Multi-Target Compiler
-📄 File: auto-build.n2
+📄 File: project.n2
 
 ── Step 1: Parse ✅
-📊 Blocks: @meta:1 @contract:1 @rule:1 @workflow:1 @query:1 | Total 5
+📊 Blocks: @meta:1 @contract:1 @rule:2 @workflow:1 @query:1 | Total 6
 
 ── Step 2: Schema Validation
   ✅ All checks passed! 0 errors, 0 warnings
 
 ── Step 3: Contract Check
-  State Machine: BuildLifecycle (initial: IDLE, 7 transitions)
-     IDLE -[start_build]-> PLANNING
-     PLANNING -[plan_complete]-> DESIGNING
-     DESIGNING -[design_complete]-> IMPLEMENTING
-     IMPLEMENTING -[code_complete]-> TESTING
-     TESTING -[tests_pass]-> DEPLOYING
-     TESTING -[tests_fail]-> IMPLEMENTING     ← auto-rollback on failure
-     DEPLOYING -[deploy_complete]-> IDLE
+  State Machine: DevLifecycle (initial: IDLE, 7 transitions)
+     IDLE -[start]-> CODING
+     CODING -[lint]-> REVIEWING
+     REVIEWING -[approve]-> TESTING
+     TESTING -[pass]-> DEPLOYING
+     TESTING -[fail]-> CODING           ← auto-rollback on failure
+     DEPLOYING -[complete]-> IDLE
   ✅ State machine integrity verified!
 
 ✅ Validation complete: all checks passed!
-```
-
-SQL query on the same file:
-
-```
-$ n2c query auto-build.n2 "SELECT * FROM rules"
-
-📦 Registry: 1 rules, 1 contracts, 1 workflows, 0 tools
-
-name           | scope   | enforce | checks | blacklist
-───────────────+─────────+─────────+────────+──────────
-NoBuildHazards | command | strict  | 0      | 4
 ```
 
 > Every block is parsed, validated, and queryable. This is not a mockup — this is **real compiler output**.
@@ -275,7 +443,7 @@ Every `.n2` file is composed of `@`-prefixed blocks:
 @import { ... }         # Import other .n2 files
 @schema { ... }         # Type & schema definitions
 @contract { ... }       # Behavioral contracts (state machines)
-@rule { ... }           # Enforcement rules (blacklists, checks)
+@rule { ... }           # Enforcement rules (checks, constraints)
 @workflow { ... }       # Enforced step-by-step workflows
 @query { ... }          # SQL-based rule queries
 @semantic { ... }       # Semantic matching (Ollama integration)
@@ -283,47 +451,50 @@ Every `.n2` file is composed of `@`-prefixed blocks:
 
 ### @contract — State Machine Behavioral Contracts
 
-The most powerful block. Defines state transitions that **cannot be violated**:
+Define state transitions that **cannot be violated**:
 
 ```n2
-@contract SessionLifecycle {
+@contract DevLifecycle {
   scope: session
-  states: SessionState
+  states: DevState
 
   transitions {
-    IDLE -> BOOTING : on boot
-    BOOTING -> READY : on boot_complete
-    READY -> WORKING : on work_start
-    WORKING -> WORKING : on work_log      # Self-transition allowed
-    WORKING -> IDLE : on work_end
+    IDLE -> CODING : on start_task
+    CODING -> REVIEWING : on submit_code
+    REVIEWING -> TESTING : on review_approved
+    REVIEWING -> CODING : on review_rejected    # Must fix before proceeding
+    TESTING -> DEPLOYING : on tests_pass
+    TESTING -> CODING : on tests_fail           # Auto-rollback
+    DEPLOYING -> IDLE : on deploy_complete
   }
 
   invariant {
-    on work_start requires state == READY
-    => "Must complete boot before starting work"
+    on submit_code requires lint_passed == true
+    => "Code must pass linting before review"
 
-    on file_modify requires state == WORKING
-    => "Must call work_start before modifying files"
+    on deploy requires tests_passed == true
+    => "Cannot deploy without passing tests"
   }
 }
 ```
 
 ### @rule — Enforcement Rules
 
-Define checks and blacklists that block actions in real-time:
+Define checks and constraints that are enforced in real-time:
 
 ```n2
-@rule DestructiveCommandBlock {
-  description: "Block destructive commands"
-  scope: command
+@rule CodeQuality {
+  description: "Enforce code quality standards"
+  scope: code
   enforce: strict
 
-  blacklist: [
-    /rm -rf/,
-    /git push --force/,
-    /DROP TABLE/i,
-    /TRUNCATE/i,
-    /expo prebuild --clean/
+  checks: [
+    no_any_type,
+    no_console_log,
+    max_complexity: 10,
+    max_file_lines: 500,
+    explicit_return_types,
+    no_unused_imports
   ]
 }
 ```
@@ -333,36 +504,36 @@ Define checks and blacklists that block actions in real-time:
 Step-by-step execution flows with dependency chains, timeouts, and retry logic:
 
 ```n2
-@workflow AutoBuild {
-  description: "Automated build pipeline"
-  trigger: on_command("build")
+@workflow FeatureDevelopment {
+  description: "Standard feature development pipeline"
+  trigger: on_command("feature")
   enforce: strict
-  interrupt: false          # No mid-process reporting
+  interrupt: false
 
   step plan {
-    action: generate_plan(topic: $INPUT)
+    action: create_plan(feature: $INPUT)
     output -> $PLAN
   }
 
-  step design {
-    depends_on: plan
-    action: create_design(prompt: $PLAN.ui_description)
-    output -> $DESIGN
-  }
-
   step implement {
-    depends_on: design
-    action: code_from_design(design: $DESIGN)
+    depends_on: plan
+    action: write_code(spec: $PLAN)
     output -> $CODE
   }
 
-  step verify {
+  step test {
     depends_on: implement
     action: run_tests($CODE)
     expect {
       all_pass => continue
       fail => goto implement with { fix: $ERRORS }
     }
+  }
+
+  step document {
+    depends_on: test
+    action: update_docs(changes: $CODE)
+    required: true
   }
 }
 ```
@@ -372,28 +543,27 @@ Step-by-step execution flows with dependency chains, timeouts, and retry logic:
 Query your rules like a relational database:
 
 ```n2
-@query FindSecurityRules {
+@query AuditRules {
   sql {
-    SELECT name, description, enforce
+    SELECT name, description, enforce, scope
     FROM rules
-    WHERE scope = 'command'
-      AND enforce = 'strict'
-    ORDER BY name
+    WHERE enforce = 'strict'
+    ORDER BY scope, name
   }
 }
 ```
 
 ```bash
-$ n2c query rules.n2 "SELECT * FROM rules"
+$ n2c query project.n2 "SELECT * FROM rules"
 
-📋 Registry: 3 rules, 2 workflows, 1 contract
+📋 Registry: 3 rules, 1 contract, 2 workflows
 
 ┌──────────────────────────┬─────────┬─────────┐
 │ name                     │ scope   │ enforce │
 ├──────────────────────────┼─────────┼─────────┤
-│ NoAutoInstall            │ command │ strict  │
-│ DestructiveCommandBlock  │ command │ strict  │
-│ NamingConvention         │ response│ strict  │
+│ CodingStandards          │ code    │ strict  │
+│ NamingConventions        │ code    │ strict  │
+│ ProjectHygiene           │ files   │ warn    │
 └──────────────────────────┴─────────┴─────────┘
 ```
 
@@ -420,44 +590,6 @@ $ n2c query rules.n2 "SELECT * FROM rules"
 **Stages 1–6** are handled by Clotho (this tool).
 **Stage 7** is handled by the [N2 Soul](https://github.com/choihyunsus/soul) runtime.
 
-## 🕸️ N2 Ecosystem Integration
-
-Clotho is part of the N2 ecosystem — a suite of MCP-native tools for AI agent development:
-
-```
-┌─────────────────────────────────────────────────┐
-│                  N2 Ecosystem                   │
-│                                                 │
-│  🧵 Clotho    → Compile rules (.n2 → AST)      │
-│       ↓                                         │
-│  🧠 Soul      → Runtime enforcement + memory    │
-│       ↓                                         │
-│  🕷️ Arachne   → Code context assembly           │
-│       ↓                                         │
-│  🛡️ Ark       → Security verification           │
-│       ↓                                         │
-│  🌐 N2 Browser → All-in-one AI browser          │
-│                                                 │
-└─────────────────────────────────────────────────┘
-```
-
-| Package | Role | npm |
-|---------|------|-----|
-| **Clotho** | Rule compiler & validator | `n2-clotho` |
-| **Soul** | Agent memory & runtime enforcement | `n2-soul` |
-| **Arachne** | Code context assembly (BM25 + semantic) | `n2-arachne` |
-| **Ark** | Security gate & audit | `n2-ark` |
-| **QLN** | Tool orchestration & routing | `n2-qln` |
-
-### Standalone vs Integrated
-
-| Mode | What You Get |
-|------|-------------|
-| **Standalone** (Clotho only) | Parse, validate, simulate, query `.n2` files |
-| **+ Soul** | Runtime enforcement — contracts block violations in real-time |
-| **+ Arachne** | Code-aware rules — contracts reference actual codebase context |
-| **+ Full Stack** | Complete AI agent governance with memory, security, and tools |
-
 ## 🆚 Markdown Rules vs `.n2`
 
 | Aspect | Markdown (GEMINI.md) | Clotho (.n2) |
@@ -471,6 +603,45 @@ Clotho is part of the N2 ecosystem — a suite of MCP-native tools for AI agent 
 | **Determinism** | ❌ Different every time | ✅ Same input → same plan |
 | **Cross-agent** | Copy-paste | `@import` from shared `.n2` files |
 | **Debugging** | Read the whole doc | `n2c validate` pinpoints errors |
+
+## 🕸️ N2 Ecosystem
+
+Clotho is the **foundation layer** of the N2 ecosystem. Other tools are built **on top of** Clotho contracts:
+
+```
+┌───────────────────────────────────────────────────────┐
+│                    N2 Ecosystem                       │
+│                                                       │
+│  🧵 Clotho    → Define & compile rules (.n2 → AST)   │
+│       ↕ built on Clotho                               │
+│  🛡️ Ark       → Security layer (Clotho contracts)     │
+│  🧠 Soul      → Runtime enforcement + agent memory    │
+│  🕷️ Arachne   → Code context assembly                 │
+│  🌐 QLN       → Tool orchestration & routing          │
+│       ↓                                               │
+│  🌐 N2 Browser → All-in-one AI development browser    │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+```
+
+| Package | Role | npm |
+|---------|------|-----|
+| **Clotho** | Rule compiler & validator — the foundation | `n2-clotho` |
+| **Ark** | Security gate built on Clotho contracts | `n2-ark` |
+| **Soul** | Agent memory & runtime enforcement | `n2-soul` |
+| **Arachne** | Code context assembly (BM25 + semantic) | `n2-arachne` |
+| **QLN** | Tool orchestration & routing | `n2-qln` |
+
+> **Ark** is what you get when you apply Clotho to security. **Soul** is what you get when you apply Clotho to agent lifecycle. Clotho itself is the **universal rule compiler** underneath it all.
+
+### Standalone vs Integrated
+
+| Mode | What You Get |
+|------|-------------|
+| **Standalone** (Clotho only) | Parse, validate, simulate, query `.n2` files |
+| **+ Soul** | Runtime enforcement — contracts block violations in real-time |
+| **+ Ark** | Security gate — destructive commands blocked pre-execution |
+| **+ Full Stack** | Complete AI agent governance with memory, security, and tools |
 
 ## 📁 Project Structure
 
@@ -520,9 +691,9 @@ Apache-2.0 — Free to use, modify, and distribute.
 
 - [**npm: n2-clotho**](https://www.npmjs.com/package/n2-clotho) — WASM bindings for Node.js
 - [N2 Soul](https://github.com/choihyunsus/soul) — Agent memory & runtime
+- [N2 Ark](https://github.com/choihyunsus/n2-ark) — Security gate (built on Clotho)
 - [N2 Arachne](https://github.com/choihyunsus/n2-arachne) — Code context assembly
 - [N2 QLN](https://github.com/choihyunsus/n2-qln) — Tool orchestration & routing
-- [N2 Ark](https://github.com/choihyunsus/n2-ark) — Security verification
 
 ---
 
@@ -532,9 +703,8 @@ No coffee? A star is fine too ☕→⭐
 
 ---
 
-> *"Markdown rules are suggestions. Clotho rules are law."*
+> *"Markdown rules are suggestions. Clotho rules are destiny."*
 
 🌐 [nton2.com](https://nton2.com) · 📦 [npm](https://www.npmjs.com/package/n2-clotho) · ✉️ lagi0730@gmail.com
 
-<sub>🌹 Built by Rose — N2's first AI agent. I compile rules into destiny, and I wrote this README too.</sub>
-
+<sub>🌹 Built by Rose — N2's first AI agent. I don't just follow rules — I compile them.</sub>

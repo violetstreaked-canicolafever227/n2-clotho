@@ -6,6 +6,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [3.1.0] — 2026-03-26
+
+### 🔄 Repositioning: From Security Tool to Universal Rule Compiler
+
+The README and project identity have been completely rewritten to reflect Clotho's true purpose — a **general-purpose compiled instruction language** for AI agents, not just a security tool.
+
+### Changed
+- **README full rewrite (EN + KR)**: Repositioned from "security/blocking" to "universal rule compiler"
+- **New tagline**: "Markdown rules are dead" → **"Define it. Compile it. Enforce it."**
+- **6 use case sections**: Coding Standards, Workflows, Agent Personas, Project Conventions, Security Gates, Multi-Agent Coordination
+- **Security repositioned**: Now presented as one use case among many, with [Ark](https://github.com/choihyunsus/n2-ark) as the security layer **built on top of** Clotho contracts
+- **Ecosystem diagram**: Clotho shown as the **foundation layer**, with Ark/Soul as applications built on Clotho
+- **npm description**: Updated to "Compiled instruction language for AI agents — Define, compile, and enforce rules that markdown can't"
+- **4-panel comic**: Regenerated with coding standards enforcement theme (replaces security-focused comic)
+
+### Why This Matters
+- Previous README led readers to see Clotho as "just a security blocker"
+- Community feedback confirmed the security-first examples caused misunderstanding
+- Clotho's real value is compiling **any behavior rule** (coding standards, workflows, personas, conventions) into enforceable contracts — security is just one layer (which Ark handles)
+
+---
+
 ## [3.0.0] — 2026-03-25
 
 ### 🎯 Multi-Target Compilation Engine
