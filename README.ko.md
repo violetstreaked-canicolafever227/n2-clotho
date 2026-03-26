@@ -68,187 +68,31 @@ Clotho가 도입하는 `.n2` — 컴파일형 명령어 언어:
 
 ## 🔥 Clotho로 무엇을 만들 수 있나요?
 
-Clotho는 **범용 규칙 컴파일러**입니다. 정의할 수 있는 것들의 예시:
+Clotho는 **범용 규칙 컴파일러**입니다. 정의할 수 있는 것들:
 
-### 1. 📏 코딩 표준 — 제안이 아닌, 강제
+| 유스케이스 | `.md`가 하는 것 | `.n2`가 하는 것 |
+|-----------|----------------|----------------|
+| 📏 **코딩 표준** | "TypeScript strict 써주세요" 🙏 | `no_any_type`, `max_file_lines: 500` — 컴파일러가 강제 |
+| 🔄 **워크플로우** | "이 순서대로 해주세요: 1, 2, 3..." 🙏 | 상태머신 — 단계 건너뛰기 → ❌ 차단 |
+| 🤖 **에이전트 페르소나** | "친근하고 프로페셔널하게" 🙏 | 스키마 타입 톤/전문성 + 불변 조건 검사 |
+| 📋 **프로젝트 컨벤션** | "모든 폴더에 README.md 넣어주세요" 🙏 | `readme_required`, `no_temp_files` — 자동 검사 |
+| 🛡️ **보안 게이트** | "rm -rf 실행하지 마세요" 🙏 | 블랙리스트 규칙 → [Ark](https://github.com/choihyunsus/n2-ark)가 런타임에서 강제 |
+| 🔀 **멀티 에이전트** | "같은 파일 편집하지 마세요" 🙏 | 소유권 계약 + 상태머신 전이 |
+
+**간단한 예시** — 무시할 수 없는 코딩 표준:
 
 ```n2
 @rule TypeScriptStrict {
-  description: "TypeScript 모범 사례 강제"
   scope: code
   enforce: strict
-
-  checks: [
-    no_any_type,            # `as any` 제로 — 올바른 타입 사용
-    no_ts_ignore,           # @ts-ignore, @ts-expect-error 금지
-    explicit_return_types,  # 모든 함수는 반환 타입 명시
-    max_file_lines: 500,    # 파일 500줄 제한
-    max_function_lines: 50  # 함수 50줄 제한
-  ]
-}
-
-@rule NamingConventions {
-  description: "코드베이스 전체 일관된 네이밍"
-  scope: code
-  enforce: strict
-
-  checks: [
-    components: /^[A-Z][a-zA-Z]+$/,    # PascalCase 컴포넌트
-    variables: /^[a-z][a-zA-Z0-9]*$/,   # camelCase 변수
-    constants: /^[A-Z_]+$/,             # UPPER_SNAKE 상수
-    files: /^[a-z][a-z0-9-]*\.[a-z]+$/  # kebab-case 파일
-  ]
+  checks: [no_any_type, max_file_lines: 500, max_function_lines: 50]
 }
 ```
 
 > **Before**: "TypeScript strict 모드 써주세요" → AI가 `any`를 47번 사용.
 > **After**: 컴파일된 규칙이 모든 `any`를 코드베이스에 도달하기 전에 차단.
 
-### 2. 🔄 워크플로우 — 건너뛸 수 없는 파이프라인
-
-```n2
-@workflow CodeReview {
-  description: "필수 코드 리뷰 파이프라인"
-  trigger: on_command("review")
-  enforce: strict
-  interrupt: false
-
-  step lint {
-    description: "변경된 모든 파일에 린터 실행"
-    action: run_linter(files: $CHANGED_FILES)
-    expect {
-      pass => continue
-      fail => abort with "린트 에러를 먼저 수정하세요"
-    }
-  }
-
-  step test {
-    depends_on: lint
-    action: run_tests(coverage: true)
-    expect {
-      coverage >= 80% => continue
-      fail => abort with "테스트 통과 + 커버리지 80% 이상 필수"
-    }
-  }
-
-  step review {
-    depends_on: test
-    action: generate_review(diff: $DIFF, standards: $RULES)
-    output -> $REVIEW
-  }
-
-  step approve {
-    depends_on: review
-    action: submit_review($REVIEW)
-    required: true
-  }
-}
-```
-
-> 린트 → 테스트 → 리뷰 → 승인. 모든 단계가 강제. 지름길 없음.
-
-### 3. 🤖 에이전트 페르소나 — AI 행동 방식 정의
-
-```n2
-@schema AgentConfig {
-  name: string [required]
-  role: string [required]
-  language: string [default: "ko"]
-  tone: enum(professional, friendly, casual) [default: friendly]
-  expertise: string[]
-}
-
-@contract AgentBehavior {
-  scope: response
-  states: AgentConfig
-
-  invariant {
-    on respond requires tone == $CONFIG.tone
-    => "응답은 설정된 톤에 맞아야 합니다"
-
-    on code_generate requires language in $CONFIG.expertise
-    => "에이전트는 전문 분야의 언어만 생성해야 합니다"
-  }
-}
-```
-
-> AI의 성격, 전문성, 경계선을 정의 — 복사-붙여넣기가 아닌, 컴파일로.
-
-### 4. 📋 프로젝트 컨벤션 — 일관성이 유지되는 구조
-
-```n2
-@rule ProjectHygiene {
-  description: "모든 프로젝트는 깨끗한 구조를 유지해야 함"
-  scope: filesystem
-  enforce: strict
-
-  checks: [
-    readme_required: "모든 디렉토리에 README.md 필수",
-    no_temp_files: /\.(tmp|bak|swp)$/,
-    source_header: "모든 소스 파일은 목적 주석으로 시작",
-    max_nesting_depth: 4
-  ]
-}
-
-@rule Internationalization {
-  description: "사용자에게 보이는 모든 문자열은 i18n 키 사용"
-  scope: code
-  enforce: warn
-
-  checks: [
-    no_hardcoded_strings_in_jsx,
-    i18n_key_format: /^[a-z]+(\.[a-z_]+)+$/
-  ]
-}
-```
-
-> 폴더 구조, 네이밍, 다국어, 문서화 — 첫 날부터 모두 강제.
-
-### 5. 🛡️ 보안 게이트 — Clotho 위에 구축된 [Ark](https://github.com/choihyunsus/n2-ark)
-
-```n2
-@rule CommandSafety {
-  description: "위험한 명령어 차단"
-  scope: command
-  enforce: strict
-
-  blacklist: [
-    /rm -rf/,
-    /git push --force/,
-    /DROP TABLE/i
-  ]
-}
-```
-
-> 보안 규칙은 Clotho의 **하나의 유스케이스**일 뿐입니다. [N2 Ark](https://github.com/choihyunsus/n2-ark) 프로젝트가 Clotho 계약을 가져다가 완전한 보안 검증 레이어를 구축합니다.
-
-### 6. 🔀 멀티 에이전트 협업
-
-```n2
-@contract MultiAgentWorkflow {
-  scope: session
-  states: WorkflowState
-
-  transitions {
-    IDLE -> CLAIMED : on file_claim
-    CLAIMED -> EDITING : on edit_start
-    EDITING -> REVIEWING : on edit_complete
-    REVIEWING -> MERGED : on review_pass
-    REVIEWING -> EDITING : on review_fail
-    MERGED -> IDLE : on release
-  }
-
-  invariant {
-    on edit_start requires owner == $CURRENT_AGENT
-    => "소유권을 주장한 에이전트만 편집 가능"
-
-    on file_claim requires state == IDLE
-    => "이미 편집 중인 파일은 소유권 주장 불가"
-  }
-}
-```
-
-> 여러 AI 에이전트가 같은 프로젝트에서 작업? Clotho가 컴파일된 소유권 계약으로 충돌을 방지합니다.
+📖 **상세 비교**: [`.md` 스킬 vs `.n2` 계약 — 전체 비교 + 예시](docs/skill-vs-n2.md)
 
 ## ⚡ 빠른 시작
 
@@ -462,9 +306,9 @@ Clotho는 AI 에이전트가 계약을 프로그래밍 방식으로 컴파일하
     IDLE -> CODING : on start_task
     CODING -> REVIEWING : on submit_code
     REVIEWING -> TESTING : on review_approved
-    REVIEWING -> CODING : on review_rejected    # 수정 후 재제출 필수
+    REVIEWING -> CODING : on review_rejected
     TESTING -> DEPLOYING : on tests_pass
-    TESTING -> CODING : on tests_fail           # 자동 롤백
+    TESTING -> CODING : on tests_fail
     DEPLOYING -> IDLE : on deploy_complete
   }
 
@@ -541,17 +385,6 @@ Clotho는 AI 에이전트가 계약을 프로그래밍 방식으로 컴파일하
 ### @query — SQL 기반 규칙 쿼리
 
 규칙을 관계형 데이터베이스처럼 쿼리:
-
-```n2
-@query AuditRules {
-  sql {
-    SELECT name, description, enforce, scope
-    FROM rules
-    WHERE enforce = 'strict'
-    ORDER BY scope, name
-  }
-}
-```
 
 ```bash
 $ n2c query project.n2 "SELECT * FROM rules"

@@ -68,187 +68,31 @@ Clotho introduces `.n2` — a compiled language with:
 
 ## 🔥 What Can You Build With Clotho?
 
-Clotho is a **general-purpose rule compiler**. Here are just some of the things you can define:
+Clotho is a **general-purpose rule compiler**. Here's what you can define:
 
-### 1. 📏 Coding Standards — Enforce Quality, Not Just Suggest It
+| Use Case | What `.md` Does | What `.n2` Does |
+|----------|----------------|----------------|
+| 📏 **Coding Standards** | "Please use strict TypeScript" 🙏 | `no_any_type`, `max_file_lines: 500` — compiler-enforced |
+| 🔄 **Workflows** | "Follow these steps: 1, 2, 3..." 🙏 | State machine — skip a step → ❌ BLOCKED |
+| 🤖 **Agent Personas** | "Be friendly and professional" 🙏 | Schema-typed tone/expertise with invariant checks |
+| 📋 **Project Conventions** | "Every folder needs README.md" 🙏 | `readme_required`, `no_temp_files` — auto-checked |
+| 🛡️ **Security Gates** | "Don't run rm -rf" 🙏 | Blacklist rules → [Ark](https://github.com/choihyunsus/n2-ark) enforces at runtime |
+| 🔀 **Multi-Agent** | "Don't edit the same file" 🙏 | Ownership contracts with state machine transitions |
+
+**Quick example** — coding standards that can't be ignored:
 
 ```n2
 @rule TypeScriptStrict {
-  description: "Enforce TypeScript best practices"
   scope: code
   enforce: strict
-
-  checks: [
-    no_any_type,            # Zero `as any` — use proper types
-    no_ts_ignore,           # No @ts-ignore or @ts-expect-error
-    explicit_return_types,  # Every function must declare return type
-    max_file_lines: 500,    # Files must stay under 500 lines
-    max_function_lines: 50  # Functions must stay under 50 lines
-  ]
-}
-
-@rule NamingConventions {
-  description: "Consistent naming across the codebase"
-  scope: code
-  enforce: strict
-
-  checks: [
-    components: /^[A-Z][a-zA-Z]+$/,    # PascalCase components
-    variables: /^[a-z][a-zA-Z0-9]*$/,   # camelCase variables
-    constants: /^[A-Z_]+$/,             # UPPER_SNAKE constants
-    files: /^[a-z][a-z0-9-]*\.[a-z]+$/  # kebab-case files
-  ]
+  checks: [no_any_type, max_file_lines: 500, max_function_lines: 50]
 }
 ```
 
 > **Before**: "Please use strict TypeScript" → AI uses `any` 47 times.
 > **After**: Compiled rule blocks every `any` before it reaches your codebase.
 
-### 2. 🔄 Workflows — Pipelines That Can't Be Skipped
-
-```n2
-@workflow CodeReview {
-  description: "Mandatory code review pipeline"
-  trigger: on_command("review")
-  enforce: strict
-  interrupt: false
-
-  step lint {
-    description: "Run linter on all changed files"
-    action: run_linter(files: $CHANGED_FILES)
-    expect {
-      pass => continue
-      fail => abort with "Fix lint errors first"
-    }
-  }
-
-  step test {
-    depends_on: lint
-    action: run_tests(coverage: true)
-    expect {
-      coverage >= 80% => continue
-      fail => abort with "Tests must pass with 80%+ coverage"
-    }
-  }
-
-  step review {
-    depends_on: test
-    action: generate_review(diff: $DIFF, standards: $RULES)
-    output -> $REVIEW
-  }
-
-  step approve {
-    depends_on: review
-    action: submit_review($REVIEW)
-    required: true
-  }
-}
-```
-
-> Lint → Test → Review → Approve. Every step enforced. No shortcuts.
-
-### 3. 🤖 Agent Personas — Define How AI Behaves
-
-```n2
-@schema AgentConfig {
-  name: string [required]
-  role: string [required]
-  language: string [default: "en"]
-  tone: enum(professional, friendly, casual) [default: friendly]
-  expertise: string[]
-}
-
-@contract AgentBehavior {
-  scope: response
-  states: AgentConfig
-
-  invariant {
-    on respond requires tone == $CONFIG.tone
-    => "Response must match configured tone"
-
-    on code_generate requires language in $CONFIG.expertise
-    => "Agent should only generate code in known languages"
-  }
-}
-```
-
-> Define your AI's personality, expertise, and boundaries — compiled, not copy-pasted.
-
-### 4. 📋 Project Conventions — Structure That Stays Consistent
-
-```n2
-@rule ProjectHygiene {
-  description: "Every project must maintain clean structure"
-  scope: filesystem
-  enforce: strict
-
-  checks: [
-    readme_required: "Every directory must have README.md",
-    no_temp_files: /\.(tmp|bak|swp)$/,
-    source_header: "Every source file must start with a purpose comment",
-    max_nesting_depth: 4
-  ]
-}
-
-@rule Internationalization {
-  description: "All user-facing strings must use i18n keys"
-  scope: code
-  enforce: warn
-
-  checks: [
-    no_hardcoded_strings_in_jsx,
-    i18n_key_format: /^[a-z]+(\.[a-z_]+)+$/
-  ]
-}
-```
-
-> Folder structure, naming, i18n, documentation — all enforced from day one.
-
-### 5. 🛡️ Security Gates — Built on Clotho, Powered by [Ark](https://github.com/choihyunsus/n2-ark)
-
-```n2
-@rule CommandSafety {
-  description: "Block dangerous operations"
-  scope: command
-  enforce: strict
-
-  blacklist: [
-    /rm -rf/,
-    /git push --force/,
-    /DROP TABLE/i
-  ]
-}
-```
-
-> Security rules are just **one use case** of Clotho. The [N2 Ark](https://github.com/choihyunsus/n2-ark) project takes Clotho contracts and builds a complete security verification layer on top.
-
-### 6. 🔀 Multi-Agent Coordination
-
-```n2
-@contract MultiAgentWorkflow {
-  scope: session
-  states: WorkflowState
-
-  transitions {
-    IDLE -> CLAIMED : on file_claim
-    CLAIMED -> EDITING : on edit_start
-    EDITING -> REVIEWING : on edit_complete
-    REVIEWING -> MERGED : on review_pass
-    REVIEWING -> EDITING : on review_fail
-    MERGED -> IDLE : on release
-  }
-
-  invariant {
-    on edit_start requires owner == $CURRENT_AGENT
-    => "Only the claiming agent can edit"
-
-    on file_claim requires state == IDLE
-    => "Cannot claim a file already being edited"
-  }
-}
-```
-
-> Multiple AI agents working on the same project? Clotho prevents conflicts with compiled ownership contracts.
+📖 **Deep dive**: [`.md` Skills vs `.n2` Contracts — full comparison with examples](docs/skill-vs-n2.md)
 
 ## ⚡ Quick Start
 
