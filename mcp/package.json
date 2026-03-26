@@ -1,6 +1,6 @@
 {
   "name": "n2-clotho",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Compiled instruction language for AI agents — Define, compile, and enforce rules that markdown can't",
   "main": "server.js",
   "type": "commonjs",
