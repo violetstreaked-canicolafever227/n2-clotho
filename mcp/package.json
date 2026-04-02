@@ -1,9 +1,15 @@
 {
   "name": "n2-clotho",
-  "version": "3.1.2",
-  "description": "Compiled instruction language for AI agents — Define, compile, and enforce rules that markdown can't",
+  "version": "3.2.0",
+  "description": "Compiled instruction language for AI agents — Define, compile, and enforce rules that markdown can't. Includes WASM runtime.",
   "main": "server.js",
   "type": "commonjs",
+  "files": [
+    "server.js",
+    "tools/",
+    "wasm/",
+    "README.md"
+  ],
   "scripts": {
     "start": "node server.js",
     "start:sse": "CLOTHO_TRANSPORT=sse node server.js",

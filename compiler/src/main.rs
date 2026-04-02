@@ -33,20 +33,20 @@ fn main() {
     let source = match fs::read_to_string(filepath) {
         Ok(s) => s,
         Err(e) => {
-            eprintln!("❌ Failed to read file [{}]: {}", filepath, e);
+            eprintln!("Error: Failed to read file [{}]: {}", filepath, e);
             std::process::exit(1);
         }
     };
 
-    println!("🔧 n2c v{} — Clotho compiler", VERSION);
-    println!("📄 File: {}", filepath);
+    println!("n2c v{} — Clotho Multi-Target Compiler", VERSION);
+    println!("File: {}", filepath);
     println!();
 
     // Step 1: Parse
     let ast = match parse_n2(&source) {
         Ok(ast) => ast,
         Err(e) => {
-            eprintln!("❌ {}", e);
+            eprintln!("Parse Error: {}", e);
             std::process::exit(1);
         }
     };
@@ -58,7 +58,7 @@ fn main() {
         "query" => cmd_query(&ast, args.get(3).cloned()),
         "compile" => cmd_compile(&ast, filepath, &args[3..]),
         _ => {
-            eprintln!("❌ Unknown command: '{}'", command);
+            eprintln!("Error: Unknown command '{}'", command);
             print_usage();
             std::process::exit(1);
         }
@@ -66,15 +66,15 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("🔧 n2c v{} — Clotho multi-target compiler", VERSION);
+    eprintln!("n2c v{} — Clotho Multi-Target Compiler", VERSION);
     eprintln!();
     eprintln!("Usage:");
     eprintln!("  n2c <file.n2>                                 Parse + AST JSON output");
     eprintln!("  n2c validate <file.n2>                        Parse + validate + contract check");
     eprintln!("  n2c simulate <file.n2>                        Contract state machine simulation");
     eprintln!("  n2c query <file.n2> \"SELECT * FROM rules\"     SQL query");
-    eprintln!("  n2c compile <file.n2> --target <TARGET>       Compile to specific target");
-    eprintln!("  n2c compile <file.n2> --target all            Compile to all targets");
+    eprintln!("  n2c compile <file.n2> [TARGET]                Compile to specific target");
+    eprintln!("  n2c compile <file.n2> all                     Compile to all targets");
     eprintln!("  n2c backends                                  List supported backends");
     eprintln!();
     eprintln!("Targets: rust(.n2rs) | c(.n2c) | cpp(.n2c2) | go(.n2go) | python(.n2py) | ts(.n2ts)");
@@ -82,13 +82,13 @@ fn print_usage() {
 
 fn cmd_parse(ast: &n2_compiler::ast::N2File) {
     let json = serde_json::to_string_pretty(ast).unwrap();
-    println!("✅ Parse success! AST:");
+    println!("Parse success! AST:");
     println!("{}", json);
     print_summary(ast);
 }
 
 fn cmd_validate(ast: &n2_compiler::ast::N2File) {
-    println!("── Step 1: Parse ✅");
+    println!("── Step 1: Parse");
     print_summary(ast);
 
     println!();
@@ -106,9 +106,9 @@ fn cmd_validate(ast: &n2_compiler::ast::N2File) {
     }
 
     if error_count == 0 && warn_count == 0 {
-        println!("  ✅ Validation passed! 0 errors, 0 warnings");
+        println!("  All checks passed! 0 errors, 0 warnings");
     } else {
-        println!("  Result: ❌ {} errors, ⚠️ {} warnings", error_count, warn_count);
+        println!("  Result: {} errors, {} warnings", error_count, warn_count);
     }
 
     println!();
@@ -116,7 +116,7 @@ fn cmd_validate(ast: &n2_compiler::ast::N2File) {
     let runtime = ContractRuntime::from_file(ast);
 
     if runtime.machines.is_empty() {
-        println!("  ℹ️ No state machine contracts (skipped)");
+        println!("  No state machine contracts (skipped)");
     } else {
         println!("{}", runtime.summary().lines()
             .map(|l| format!("  {}", l))
@@ -125,7 +125,7 @@ fn cmd_validate(ast: &n2_compiler::ast::N2File) {
 
         let violations = runtime.check_integrity();
         if violations.is_empty() {
-            println!("  ✅ State machine integrity check passed!");
+            println!("  State machine integrity verified!");
         } else {
             for v in &violations {
                 println!("  {}", v);
@@ -135,10 +135,10 @@ fn cmd_validate(ast: &n2_compiler::ast::N2File) {
 
     println!();
     if error_count > 0 {
-        println!("🚨 Validation failed: {} errors found", error_count);
+        println!("Validation failed: {} errors found", error_count);
         std::process::exit(1);
     } else {
-        println!("✅ Validation complete: all checks passed!");
+        println!("Validation complete: all checks passed!");
     }
 }
 
@@ -147,7 +147,7 @@ fn cmd_simulate(ast: &n2_compiler::ast::N2File) {
     let runtime = ContractRuntime::from_file(ast);
 
     if runtime.machines.is_empty() {
-        println!("  ℹ️ No state machine contracts found");
+        println!("  No state machine contracts found");
         std::process::exit(0);
     }
 
@@ -160,20 +160,20 @@ fn cmd_query(ast: &n2_compiler::ast::N2File, extra: Option<String>) {
     println!();
 
     let sql = extra.unwrap_or_else(|| "SELECT * FROM rules".to_string());
-    println!("📝 SQL: {}", sql);
+    println!("SQL: {}", sql);
     println!();
 
     match registry.execute_query(&sql) {
         Ok(result) => print!("{}", result),
         Err(e) => {
-            eprintln!("❌ Query error: {}", e);
+            eprintln!("Query error: {}", e);
             std::process::exit(1);
         }
     }
 }
 
 fn cmd_compile(ast: &n2_compiler::ast::N2File, filepath: &str, remaining_args: &[String]) {
-    // Parse --target from remaining args
+    // Parse target from remaining args
     let target = parse_target_arg(remaining_args);
 
     let registry = BackendRegistry::new();
@@ -192,7 +192,7 @@ fn cmd_compile(ast: &n2_compiler::ast::N2File, filepath: &str, remaining_args: &
     let base_path = Path::new(filepath).with_extension("");
 
     if target == "all" {
-        println!("🎯 Compiling to all targets");
+        println!("All targets batch compile");
         println!();
 
         let results = registry.compile_all(ast, &base_meta);
@@ -204,20 +204,20 @@ fn cmd_compile(ast: &n2_compiler::ast::N2File, filepath: &str, remaining_args: &
             match result {
                 Ok(code) => {
                     fs::write(&out_path, code).unwrap_or_else(|e| {
-                        eprintln!("  ❌ {} write failed: {}", out_path, e);
+                        eprintln!("  {} write failed: {}", out_path, e);
                     });
-                    println!("  ✅ {} → {} ({} bytes)", target_name, out_path, code.len());
+                    println!("  {} → {} ({} bytes)", target_name, out_path, code.len());
                     success_count += 1;
                 }
                 Err(e) => {
-                    eprintln!("  ❌ {} failed: {}", target_name, e);
+                    eprintln!("  {} failed: {}", target_name, e);
                     fail_count += 1;
                 }
             }
         }
 
         println!();
-        println!("📊 Result: {} success, {} failed / {} targets",
+        println!("Result: {} success, {} failed / {} targets",
             success_count, fail_count, results.len());
     } else {
         let mut meta = base_meta;
@@ -230,20 +230,20 @@ fn cmd_compile(ast: &n2_compiler::ast::N2File, filepath: &str, remaining_args: &
                     .unwrap_or(".n2out");
                 let out_path = format!("{}{}", base_path.display(), ext);
                 fs::write(&out_path, &code).unwrap_or_else(|e| {
-                    eprintln!("❌ Write failed: {}", e);
+                    eprintln!("Write failed: {}", e);
                     std::process::exit(1);
                 });
-                println!("✅ {} → {} ({} bytes)", target, out_path, code.len());
+                println!("{} → {} ({} bytes)", target, out_path, code.len());
             }
             Err(e) => {
-                eprintln!("❌ {}", e);
+                eprintln!("Error: {}", e);
                 std::process::exit(1);
             }
         }
     }
 }
 
-/// Parse --target argument from remaining CLI args
+/// Parse target argument from remaining CLI args
 /// Supports: "--target=rust", "--target rust", bare "rust"
 fn parse_target_arg(args: &[String]) -> String {
     if args.is_empty() {
@@ -267,7 +267,7 @@ fn parse_target_arg(args: &[String]) -> String {
 }
 
 fn cmd_backends() {
-    println!("🔧 n2c v{} — Clotho multi-target compiler", VERSION);
+    println!("n2c v{} — Clotho Multi-Target Compiler", VERSION);
     println!();
     println!("Supported backends:");
     println!();
@@ -294,10 +294,16 @@ fn print_summary(ast: &n2_compiler::ast::N2File) {
             Block::Semantic(_) => counts[7] += 1,
         }
     }
-    println!("📊 Blocks: @meta:{} @import:{} @schema:{} @contract:{} @rule:{} @workflow:{} @query:{} @semantic:{} | total {}",
-        counts[0], counts[1], counts[2], counts[3], counts[4], counts[5], counts[6], counts[7],
-        ast.blocks.len()
-    );
+    
+    let names = ["@meta", "@import", "@schema", "@contract", "@rule", "@workflow", "@query", "@semantic"];
+    let mut parts = Vec::new();
+    for i in 0..8 {
+        if counts[i] > 0 {
+            parts.push(format!("{}:{}", names[i], counts[i]));
+        }
+    }
+    
+    println!(" Blocks: {} | Total {}", parts.join(" "), ast.blocks.len());
 }
 
 /// ISO 8601 timestamp using std::time (no external dependency)

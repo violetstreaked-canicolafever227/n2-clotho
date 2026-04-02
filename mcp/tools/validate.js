@@ -1,40 +1,60 @@
-// tools/validate.js — clotho_validate: Validate .n2 source syntax and contract integrity
+// tools/validate.js — clotho_validate: Full validation pipeline
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-function registerValidateTools(server, z, compilerBin) {
+function registerValidateTools(server, z, compiler) {
     server.tool(
         'clotho_validate',
-        'Validate a .n2 AI behavioral contract file. Checks syntax, schema validation, and state machine integrity without generating output files.',
+        'Validate a .n2 AI behavioral contract. Runs syntax check, schema validation, and state machine integrity verification.',
         {
-            source: z.string().describe('Absolute path to the .n2 source file'),
+            source: z.string().describe('Absolute path to the .n2 source file OR raw .n2 source code'),
         },
         async ({ source }) => {
             try {
-                if (!fs.existsSync(source)) {
+                let n2Source;
+                let sourceName;
+                if (fs.existsSync(source)) {
+                    n2Source = fs.readFileSync(source, 'utf-8');
+                    sourceName = path.basename(source);
+                } else if (source.includes('@meta') || source.includes('@rule')) {
+                    n2Source = source;
+                    sourceName = 'inline.n2';
+                } else {
                     return { content: [{ type: 'text', text: `❌ Source file not found: ${source}` }] };
                 }
 
-                const result = execFileSync(compilerBin, ['validate', source], {
-                    encoding: 'utf-8',
-                    timeout: 15000,
-                });
+                if (compiler.type === 'wasm') {
+                    const wasm = compiler.module;
+                    const result = wasm.validate_n2_wasm(n2Source);
 
-                return {
-                    content: [{
-                        type: 'text',
-                        text: `🧵 **Clotho Validate** — ${path.basename(source)}\n\n${result.trim()}`
-                    }]
-                };
+                    const summary = [
+                        `🧵 **Clotho Validate** (WASM)`,
+                        `📄 Source: ${sourceName}`,
+                        ``,
+                        result,
+                    ];
+
+                    return { content: [{ type: 'text', text: summary.join('\n') }] };
+                } else {
+                    const result = execFileSync(compiler.bin, ['validate', source], {
+                        encoding: 'utf-8',
+                        timeout: 30000,
+                    });
+
+                    const summary = [
+                        `🧵 **Clotho Validate**`,
+                        `📄 Source: ${sourceName}`,
+                        ``,
+                        result.trim(),
+                    ];
+
+                    return { content: [{ type: 'text', text: summary.join('\n') }] };
+                }
             } catch (err) {
-                const stderr = err.stderr ? err.stderr.toString() : '';
-                const stdout = err.stdout ? err.stdout.toString() : '';
+                const stderr = err.stderr ? err.stderr.toString() : err.message;
                 return {
-                    content: [{
-                        type: 'text',
-                        text: `❌ Validation failed:\n${stdout}\n${stderr}`
-                    }],
+                    content: [{ type: 'text', text: `❌ Validation error:\n${stderr}` }],
                     isError: true,
                 };
             }

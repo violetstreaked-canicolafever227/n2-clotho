@@ -1,16 +1,34 @@
 // n2-clotho MCP Server — Multi-Target AI Contract Compiler
 // Supports both stdio and SSE transport modes
+// v3.2.0: WASM runtime — no Rust toolchain required
 
 const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { z } = require('zod');
 const path = require('path');
+const fs = require('fs');
 const pkg = require('./package.json');
 
-// Resolve compiler binary path
-const COMPILER_BIN = path.resolve(__dirname, '..', 'compiler', 'target', 'release',
+// ═══════════════════════════════════════════════════════
+// Compiler Resolution: WASM (bundled) → Native binary (fallback)
+// ═══════════════════════════════════════════════════════
+
+let compiler = null;
+const wasmPath = path.resolve(__dirname, 'wasm', 'n2_compiler.js');
+const nativeBin = path.resolve(__dirname, '..', 'compiler', 'target', 'release',
     process.platform === 'win32' ? 'n2-compiler.exe' : 'n2-compiler'
 );
+
+if (fs.existsSync(wasmPath)) {
+    compiler = { type: 'wasm', module: require(wasmPath), bin: null };
+} else if (fs.existsSync(nativeBin)) {
+    compiler = { type: 'native', module: null, bin: nativeBin };
+} else {
+    console.error('[n2-clotho] ❌ Neither WASM nor native compiler found!');
+    console.error(`  WASM: ${wasmPath}`);
+    console.error(`  Native: ${nativeBin}`);
+    process.exit(1);
+}
 
 const server = new McpServer({
     name: 'n2-clotho',
@@ -27,11 +45,11 @@ const { registerValidateTools } = require('./tools/validate');
 const { registerBackendTools } = require('./tools/backends');
 const { registerInspectTools } = require('./tools/inspect');
 
-registerCompileTools(server, z, COMPILER_BIN);
-registerBatchTools(server, z, COMPILER_BIN);
-registerValidateTools(server, z, COMPILER_BIN);
-registerBackendTools(server, z, COMPILER_BIN);
-registerInspectTools(server, z, COMPILER_BIN);
+registerCompileTools(server, z, compiler);
+registerBatchTools(server, z, compiler);
+registerValidateTools(server, z, compiler);
+registerBackendTools(server, z, compiler);
+registerInspectTools(server, z, compiler);
 
 // ═══════════════════════════════════════════════════════
 // Boot

@@ -1,13 +1,14 @@
-// tools/inspect.js — clotho_inspect: Read and display compiled contract file contents
+// tools/inspect.js — clotho_inspect: Read compiled contract contents
+const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-function registerInspectTools(server, z, compilerBin) {
+function registerInspectTools(server, z, compiler) {
     server.tool(
         'clotho_inspect',
-        'Inspect a compiled .n2 contract file. Reads and displays the generated code with metadata. Supports .n2rs, .n2c, .n2c2, .n2go, .n2py, .n2ts files.',
+        'Read and display the contents of a compiled .n2 contract file (.n2rs, .n2c, .n2ts, etc).',
         {
-            file: z.string().describe('Absolute path to the compiled contract file (.n2rs, .n2c, .n2c2, .n2go, .n2py, .n2ts)'),
+            file: z.string().describe('Absolute path to compiled output file (.n2rs, .n2c, .n2c2, .n2go, .n2py, .n2ts)'),
         },
         async ({ file }) => {
             try {
@@ -15,38 +16,17 @@ function registerInspectTools(server, z, compilerBin) {
                     return { content: [{ type: 'text', text: `❌ File not found: ${file}` }] };
                 }
 
-                const ext = path.extname(file);
-                const validExts = ['.n2rs', '.n2c', '.n2c2', '.n2go', '.n2py', '.n2ts'];
-
-                if (!validExts.includes(ext)) {
-                    return {
-                        content: [{
-                            type: 'text',
-                            text: `❌ Invalid file extension: ${ext}\nSupported: ${validExts.join(', ')}`
-                        }]
-                    };
-                }
-
                 const content = fs.readFileSync(file, 'utf-8');
-                const stat = fs.statSync(file);
-
+                const ext = path.extname(file);
                 const langMap = {
                     '.n2rs': 'rust', '.n2c': 'c', '.n2c2': 'cpp',
-                    '.n2go': 'go', '.n2py': 'python', '.n2ts': 'typescript'
+                    '.n2go': 'go', '.n2py': 'python', '.n2ts': 'typescript',
                 };
-
-                const targetMap = {
-                    '.n2rs': 'Rust', '.n2c': 'C', '.n2c2': 'C++',
-                    '.n2go': 'Go', '.n2py': 'Python', '.n2ts': 'TypeScript'
-                };
-
-                const lines = content.split('\n').length;
 
                 const summary = [
-                    `🧵 **Clotho Inspect** — ${path.basename(file)}`,
-                    `🎯 Target: ${targetMap[ext] || 'Unknown'}`,
-                    `📊 Size: ${stat.size} bytes | ${lines} lines`,
-                    `📅 Modified: ${stat.mtime.toISOString()}`,
+                    `🧵 **Clotho Inspect**`,
+                    `📄 File: ${path.basename(file)}`,
+                    `📦 Size: ${content.length} bytes`,
                     ``,
                     '```' + (langMap[ext] || ''),
                     content,
@@ -56,7 +36,7 @@ function registerInspectTools(server, z, compilerBin) {
                 return { content: [{ type: 'text', text: summary.join('\n') }] };
             } catch (err) {
                 return {
-                    content: [{ type: 'text', text: `❌ Inspect error: ${err.message}` }],
+                    content: [{ type: 'text', text: `❌ Inspect error:\n${err.message}` }],
                     isError: true,
                 };
             }

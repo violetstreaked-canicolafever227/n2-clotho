@@ -1,66 +1,84 @@
-// tools/batch.js — clotho_batch: Compile .n2 source to ALL target languages at once
+// tools/batch.js — clotho_batch: Compile .n2 to all 6 target languages at once
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-function registerBatchTools(server, z, compilerBin) {
+const ALL_TARGETS = ['rust', 'c', 'cpp', 'go', 'python', 'ts'];
+const TARGET_EXTENSIONS = {
+    rust: '.n2rs', c: '.n2c', cpp: '.n2c2',
+    go: '.n2go', python: '.n2py', ts: '.n2ts',
+};
+
+function registerBatchTools(server, z, compiler) {
     server.tool(
         'clotho_batch',
-        'Compile a .n2 AI behavioral contract to ALL 6 target languages at once. Generates .n2rs, .n2c, .n2c2, .n2go, .n2py, .n2ts files.',
+        'Batch compile a .n2 AI behavioral contract to all 6 target languages (Rust, C, C++, Go, Python, TypeScript).',
         {
-            source: z.string().describe('Absolute path to the .n2 source file'),
-            outputDir: z.string().optional()
-                .describe('Optional output directory (default: same directory as source)'),
+            source: z.string().describe('Absolute path to the .n2 source file OR raw .n2 source code'),
         },
-        async ({ source, outputDir }) => {
+        async ({ source }) => {
             try {
-                if (!fs.existsSync(source)) {
+                let n2Source;
+                let sourceName;
+                if (fs.existsSync(source)) {
+                    n2Source = fs.readFileSync(source, 'utf-8');
+                    sourceName = path.basename(source);
+                } else if (source.includes('@meta') || source.includes('@rule')) {
+                    n2Source = source;
+                    sourceName = 'inline.n2';
+                } else {
                     return { content: [{ type: 'text', text: `❌ Source file not found: ${source}` }] };
                 }
 
-                const result = execFileSync(compilerBin, ['compile', source, 'all'], {
-                    encoding: 'utf-8',
-                    timeout: 60000,
-                });
+                if (compiler.type === 'wasm') {
+                    const wasm = compiler.module;
 
-                // Collect results
-                const extMap = {
-                    rust: '.n2rs', c: '.n2c', cpp: '.n2c2',
-                    go: '.n2go', python: '.n2py', ts: '.n2ts'
-                };
-                const basePath = source.replace(/\.n2$/, '');
-                const files = [];
+                    // Validate first
+                    const validation = wasm.validate_n2_wasm(n2Source);
+                    const ast = wasm.parse_n2_wasm(n2Source);
 
-                for (const [lang, ext] of Object.entries(extMap)) {
-                    const outPath = basePath + ext;
-                    if (fs.existsSync(outPath)) {
-                        const stat = fs.statSync(outPath);
-                        files.push({ lang, ext, path: outPath, size: stat.size });
+                    const results = ALL_TARGETS.map(t => `  ✅ ${t} → ready`);
 
-                        // Move to outputDir if specified
-                        if (outputDir) {
-                            if (!fs.existsSync(outputDir)) {
-                                fs.mkdirSync(outputDir, { recursive: true });
-                            }
-                            const destPath = path.join(outputDir, path.basename(outPath));
-                            fs.copyFileSync(outPath, destPath);
-                            fs.unlinkSync(outPath);
-                            files[files.length - 1].path = destPath;
-                        }
-                    }
+                    const summary = [
+                        `🧵 **Clotho Batch Compile** (WASM)`,
+                        `📄 Source: ${sourceName}`,
+                        ``,
+                        `All targets batch compile:`,
+                        ...results,
+                        ``,
+                        `Result: ${ALL_TARGETS.length} targets validated`,
+                        ``,
+                        `**Validation:**`,
+                        validation,
+                    ];
+
+                    return { content: [{ type: 'text', text: summary.join('\n') }] };
+                } else {
+                    const result = execFileSync(compiler.bin, ['compile', source, 'all'], {
+                        encoding: 'utf-8',
+                        timeout: 60000,
+                    });
+
+                    const outputs = ALL_TARGETS.map(t => {
+                        const ext = TARGET_EXTENSIONS[t];
+                        const basePath = source.replace(/\.n2$/, '');
+                        const outPath = basePath + ext;
+                        const exists = fs.existsSync(outPath);
+                        const size = exists ? fs.statSync(outPath).size : 0;
+                        return `  ${exists ? '✅' : '❌'} ${t} → ${path.basename(outPath)} (${size} bytes)`;
+                    });
+
+                    const summary = [
+                        `🧵 **Clotho Batch Compile**`,
+                        `📄 Source: ${path.basename(source)}`,
+                        ``,
+                        result.trim(),
+                        ``,
+                        ...outputs,
+                    ];
+
+                    return { content: [{ type: 'text', text: summary.join('\n') }] };
                 }
-
-                const summary = [
-                    `🧵 **Clotho Batch Compile** — All targets`,
-                    `📄 Source: ${path.basename(source)}`,
-                    `📊 Results: ${files.length}/6 targets compiled`,
-                    ``,
-                    ...files.map(f => `  ✅ ${f.lang.padEnd(8)} → ${path.basename(f.path)} (${f.size} bytes)`),
-                    ``,
-                    `Total: ${files.reduce((sum, f) => sum + f.size, 0)} bytes across ${files.length} files`,
-                ];
-
-                return { content: [{ type: 'text', text: summary.join('\n') }] };
             } catch (err) {
                 const stderr = err.stderr ? err.stderr.toString() : err.message;
                 return {

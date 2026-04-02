@@ -1,14 +1,43 @@
 # n2-Clotho MCP Server
 
-Clotho 멀티 타겟 컴파일러의 MCP 서버. 
-AI 에이전트가 `.n2` 계약을 직접 컴파일/검증할 수 있도록 합니다.
+Clotho multi-target compiler's MCP server.
+Enables AI agents to directly compile/validate `.n2` contracts.
 
-## 도구
+## Installation
 
-| 도구 | 설명 |
-|------|------|
-| `clotho_compile` | 단일 타겟 컴파일 |
-| `clotho_batch` | 전체 6개 타겟 일괄 컴파일 |
-| `clotho_validate` | 문법 + 스키마 + 상태머신 검증 |
-| `clotho_backends` | 지원 백엔드 목록 |
-| `clotho_inspect` | 컴파일된 파일 내용 확인 |
+```bash
+npm install n2-clotho
+```
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `clotho_compile` | Compile to a specific target language |
+| `clotho_batch` | Batch compile to all 6 targets |
+| `clotho_validate` | Syntax + schema + state machine validation |
+| `clotho_backends` | List supported backends |
+| `clotho_inspect` | Read compiled contract contents |
+
+## MCP Configuration
+
+```json
+{
+  "mcpServers": {
+    "n2-clotho": {
+      "command": "node",
+      "args": ["node_modules/n2-clotho/server.js"]
+    }
+  }
+}
+```
+
+## WASM Runtime
+
+This package includes a pre-built WASM binary (364KB) — no Rust toolchain required.
+The compiler runs entirely in Node.js via WebAssembly.
+
+## Links
+
+- [GitHub](https://github.com/choihyunsus/n2-clotho) — Full documentation & source
+- [npm](https://www.npmjs.com/package/n2-clotho)
